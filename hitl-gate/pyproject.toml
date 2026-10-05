@@ -1,0 +1,25 @@
+[project]
+name = "hitl-gate"
+version = "0.1.0"
+description = "PreToolUse hook and permission rules for the Human-in-the-loop workshop stage."
+requires-python = ">=3.12"
+
+[tool.ruff]
+line-length = 110
+target-version = "py312"
+extend-include = [".claude/hooks/*.py"]
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "UP", "B", "SIM", "RUF", "ANN", "S", "PT", "PL", "C4", "D"]
+ignore = ["D203", "D213", "PLR2004"]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**" = ["S101", "S603", "D", "PLR2004"]
+
+[tool.mypy]
+strict = true
+python_version = "3.12"
+files = [".claude/hooks/block_rm.py", "tests"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
