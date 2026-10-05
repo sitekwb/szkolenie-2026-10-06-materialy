@@ -1,0 +1,1026 @@
+[
+ {
+  "table": "A",
+  "no": "093/A/NBP/2026",
+  "effectiveDate": "2026-05-15",
+  "rates": [
+   {
+    "currency": "dolar amerykański",
+    "code": "USD",
+    "mid": 3.6525
+   },
+   {
+    "currency": "euro",
+    "code": "EUR",
+    "mid": 4.2489
+   },
+   {
+    "currency": "frank szwajcarski",
+    "code": "CHF",
+    "mid": 4.6482
+   },
+   {
+    "currency": "funt szterling",
+    "code": "GBP",
+    "mid": 4.8745
+   },
+   {
+    "currency": "jen (Japonia)",
+    "code": "JPY",
+    "mid": 0.023035
+   }
+  ]
+ },
+ {
+  "table": "A",
+  "no": "094/A/NBP/2026",
+  "effectiveDate": "2026-05-18",
+  "rates": [
+   {
+    "currency": "dolar amerykański",
+    "code": "USD",
+    "mid": 3.6451
+   },
+   {
+    "currency": "euro",
+    "code": "EUR",
+    "mid": 4.2434
+   },
+   {
+    "currency": "frank szwajcarski",
+    "code": "CHF",
+    "mid": 4.6439
+   },
+   {
+    "currency": "funt szterling",
+    "code": "GBP",
+    "mid": 4.8761
+   },
+   {
+    "currency": "jen (Japonia)",
+    "code": "JPY",
+    "mid": 0.022949
+   }
+  ]
+ },
+ {
+  "table": "A",
+  "no": "095/A/NBP/2026",
+  "effectiveDate": "2026-05-19",
+  "rates": [
+   {
+    "currency": "dolar amerykański",
+    "code": "USD",
+    "mid": 3.6467
+   },
+   {
+    "currency": "euro",
+    "code": "EUR",
+    "mid": 4.2389
+   },
+   {
+    "currency": "frank szwajcarski",
+    "code": "CHF",
+    "mid": 4.6347
+   },
+   {
+    "currency": "funt szterling",
+    "code": "GBP",
+    "mid": 4.8844
+   },
+   {
+    "currency": "jen (Japonia)",
+    "code": "JPY",
+    "mid": 0.022916
+   }
+  ]
+ },
+ {
+  "table": "A",
+  "no": "096/A/NBP/2026",
+  "effectiveDate": "2026-05-20",
+  "rates": [
+   {
+    "currency": "dolar amerykański",
+    "code": "USD",
+    "mid": 3.6709
+   },
+   {
+    "currency": "euro",
+    "code": "EUR",
+    "mid": 4.2546
+   },
+   {
+    "currency": "frank szwajcarski",
+    "code": "CHF",
+    "mid": 4.6455
+   },
+   {
+    "currency": "funt szterling",
+    "code": "GBP",
+    "mid": 4.9126
+   },
+   {
+    "currency": "jen (Japonia)",
+    "code": "JPY",
+    "mid": 0.023081
+   }
+  ]
+ },
+ {
+  "table": "A",
+  "no": "097/A/NBP/2026",
+  "effectiveDate": "2026-05-21",
+  "rates": [
+   {
+    "currency": "dolar amerykański",
+    "code": "USD",
+    "mid": 3.6529
+   },
+   {
+    "currency": "euro",
+    "code": "EUR",
+    "mid": 4.2460
+   },
+   {
+    "currency": "frank szwajcarski",
+    "code": "CHF",
+    "mid": 4.6409
+   },
+   {
+    "currency": "funt szterling",
+    "code": "GBP",
+    "mid": 4.9078
+   },
+   {
+    "currency": "jen (Japonia)",
+    "code": "JPY",
+    "mid": 0.022977
+   }
+  ]
+ },
+ {
+  "table": "A",
+  "no": "098/A/NBP/2026",
+  "effectiveDate": "2026-05-22",
+  "rates": [
+   {
+    "currency": "dolar amerykański",
+    "code": "USD",
+    "mid": 3.6571
+   },
+   {
+    "currency": "euro",
+    "code": "EUR",
+    "mid": 4.2453
+   },
+   {
+    "currency": "frank szwajcarski",
+    "code": "CHF",
+    "mid": 4.6514
+   },
+   {
+    "currency": "funt szterling",
+    "code": "GBP",
+    "mid": 4.9104
+   },
+   {
+    "currency": "jen (Japonia)",
+    "code": "JPY",
+    "mid": 0.022988
+   }
+  ]
+ },
+ {
+  "table": "A",
+  "no": "099/A/NBP/2026",
+  "effectiveDate": "2026-05-25",
+  "rates": [
+   {
+    "currency": "dolar amerykański",
+    "code": "USD",
+    "mid": 3.6374
+   },
+   {
+    "currency": "euro",
+    "code": "EUR",
+    "mid": 4.2352
+   },
+   {
+    "currency": "frank szwajcarski",
+    "code": "CHF",
+    "mid": 4.6530
+   },
+   {
+    "currency": "funt szterling",
+    "code": "GBP",
+    "mid": 4.9078
+   },
+   {
+    "currency": "jen (Japonia)",
+    "code": "JPY",
+    "mid": 0.022886
+   }
+  ]
+ },
+ {
+  "table": "A",
+  "no": "100/A/NBP/2026",
+  "effectiveDate": "2026-05-26",
+  "rates": [
+   {
+    "currency": "dolar amerykański",
+    "code": "USD",
+    "mid": 3.6394
+   },
+   {
+    "currency": "euro",
+    "code": "EUR",
+    "mid": 4.2352
+   },
+   {
+    "currency": "frank szwajcarski",
+    "code": "CHF",
+    "mid": 4.6388
+   },
+   {
+    "currency": "funt szterling",
+    "code": "GBP",
+    "mid": 4.9044
+   },
+   {
+    "currency": "jen (Japonia)",
+    "code": "JPY",
+    "mid": 0.02286
+   }
+  ]
+ },
+ {
+  "table": "A",
+  "no": "101/A/NBP/2026",
+  "effectiveDate": "2026-05-27",
+  "rates": [
+   {
+    "currency": "dolar amerykański",
+    "code": "USD",
+    "mid": 3.6404
+   },
+   {
+    "currency": "euro",
+    "code": "EUR",
+    "mid": 4.2393
+   },
+   {
+    "currency": "frank szwajcarski",
+    "code": "CHF",
+    "mid": 4.6306
+   },
+   {
+    "currency": "funt szterling",
+    "code": "GBP",
+    "mid": 4.8950
+   },
+   {
+    "currency": "jen (Japonia)",
+    "code": "JPY",
+    "mid": 0.022839
+   }
+  ]
+ },
+ {
+  "table": "A",
+  "no": "102/A/NBP/2026",
+  "effectiveDate": "2026-05-28",
+  "rates": [
+   {
+    "currency": "dolar amerykański",
+    "code": "USD",
+    "mid": 3.6463
+   },
+   {
+    "currency": "euro",
+    "code": "EUR",
+    "mid": 4.2355
+   },
+   {
+    "currency": "frank szwajcarski",
+    "code": "CHF",
+    "mid": 4.6224
+   },
+   {
+    "currency": "funt szterling",
+    "code": "GBP",
+    "mid": 4.8866
+   },
+   {
+    "currency": "jen (Japonia)",
+    "code": "JPY",
+    "mid": 0.022867
+   }
+  ]
+ },
+ {
+  "table": "A",
+  "no": "103/A/NBP/2026",
+  "effectiveDate": "2026-05-29",
+  "rates": [
+   {
+    "currency": "dolar amerykański",
+    "code": "USD",
+    "mid": 3.6395
+   },
+   {
+    "currency": "euro",
+    "code": "EUR",
+    "mid": 4.2322
+   },
+   {
+    "currency": "frank szwajcarski",
+    "code": "CHF",
+    "mid": 4.6401
+   },
+   {
+    "currency": "funt szterling",
+    "code": "GBP",
+    "mid": 4.8806
+   },
+   {
+    "currency": "jen (Japonia)",
+    "code": "JPY",
+    "mid": 0.022848
+   }
+  ]
+ },
+ {
+  "table": "A",
+  "no": "104/A/NBP/2026",
+  "effectiveDate": "2026-06-01",
+  "rates": [
+   {
+    "currency": "dolar amerykański",
+    "code": "USD",
+    "mid": 3.6319
+   },
+   {
+    "currency": "euro",
+    "code": "EUR",
+    "mid": 4.2341
+   },
+   {
+    "currency": "frank szwajcarski",
+    "code": "CHF",
+    "mid": 4.6378
+   },
+   {
+    "currency": "funt szterling",
+    "code": "GBP",
+    "mid": 4.8924
+   },
+   {
+    "currency": "jen (Japonia)",
+    "code": "JPY",
+    "mid": 0.022778
+   }
+  ]
+ },
+ {
+  "table": "A",
+  "no": "105/A/NBP/2026",
+  "effectiveDate": "2026-06-02",
+  "rates": [
+   {
+    "currency": "dolar amerykański",
+    "code": "USD",
+    "mid": 3.6358
+   },
+   {
+    "currency": "euro",
+    "code": "EUR",
+    "mid": 4.2334
+   },
+   {
+    "currency": "frank szwajcarski",
+    "code": "CHF",
+    "mid": 4.6257
+   },
+   {
+    "currency": "funt szterling",
+    "code": "GBP",
+    "mid": 4.8950
+   },
+   {
+    "currency": "jen (Japonia)",
+    "code": "JPY",
+    "mid": 0.022761
+   }
+  ]
+ },
+ {
+  "table": "A",
+  "no": "106/A/NBP/2026",
+  "effectiveDate": "2026-06-03",
+  "rates": [
+   {
+    "currency": "dolar amerykański",
+    "code": "USD",
+    "mid": 3.6553
+   },
+   {
+    "currency": "euro",
+    "code": "EUR",
+    "mid": 4.2433
+   },
+   {
+    "currency": "frank szwajcarski",
+    "code": "CHF",
+    "mid": 4.6301
+   },
+   {
+    "currency": "funt szterling",
+    "code": "GBP",
+    "mid": 4.9138
+   },
+   {
+    "currency": "jen (Japonia)",
+    "code": "JPY",
+    "mid": 0.02288
+   }
+  ]
+ },
+ {
+  "table": "A",
+  "no": "107/A/NBP/2026",
+  "effectiveDate": "2026-06-05",
+  "rates": [
+   {
+    "currency": "dolar amerykański",
+    "code": "USD",
+    "mid": 3.6392
+   },
+   {
+    "currency": "euro",
+    "code": "EUR",
+    "mid": 4.2348
+   },
+   {
+    "currency": "frank szwajcarski",
+    "code": "CHF",
+    "mid": 4.6173
+   },
+   {
+    "currency": "funt szterling",
+    "code": "GBP",
+    "mid": 4.8966
+   },
+   {
+    "currency": "jen (Japonia)",
+    "code": "JPY",
+    "mid": 0.022752
+   }
+  ]
+ },
+ {
+  "table": "A",
+  "no": "108/A/NBP/2026",
+  "effectiveDate": "2026-06-08",
+  "rates": [
+   {
+    "currency": "dolar amerykański",
+    "code": "USD",
+    "mid": 3.6898
+   },
+   {
+    "currency": "euro",
+    "code": "EUR",
+    "mid": 4.2462
+   },
+   {
+    "currency": "frank szwajcarski",
+    "code": "CHF",
+    "mid": 4.6230
+   },
+   {
+    "currency": "funt szterling",
+    "code": "GBP",
+    "mid": 4.9154
+   },
+   {
+    "currency": "jen (Japonia)",
+    "code": "JPY",
+    "mid": 0.023056
+   }
+  ]
+ },
+ {
+  "table": "A",
+  "no": "109/A/NBP/2026",
+  "effectiveDate": "2026-06-09",
+  "rates": [
+   {
+    "currency": "dolar amerykański",
+    "code": "USD",
+    "mid": 3.6671
+   },
+   {
+    "currency": "euro",
+    "code": "EUR",
+    "mid": 4.2359
+   },
+   {
+    "currency": "frank szwajcarski",
+    "code": "CHF",
+    "mid": 4.6042
+   },
+   {
+    "currency": "funt szterling",
+    "code": "GBP",
+    "mid": 4.9069
+   },
+   {
+    "currency": "jen (Japonia)",
+    "code": "JPY",
+    "mid": 0.022895
+   }
+  ]
+ },
+ {
+  "table": "A",
+  "no": "110/A/NBP/2026",
+  "effectiveDate": "2026-06-10",
+  "rates": [
+   {
+    "currency": "dolar amerykański",
+    "code": "USD",
+    "mid": 3.6767
+   },
+   {
+    "currency": "euro",
+    "code": "EUR",
+    "mid": 4.2481
+   },
+   {
+    "currency": "frank szwajcarski",
+    "code": "CHF",
+    "mid": 4.6030
+   },
+   {
+    "currency": "funt szterling",
+    "code": "GBP",
+    "mid": 4.9219
+   },
+   {
+    "currency": "jen (Japonia)",
+    "code": "JPY",
+    "mid": 0.02292
+   }
+  ]
+ },
+ {
+  "table": "A",
+  "no": "111/A/NBP/2026",
+  "effectiveDate": "2026-06-11",
+  "rates": [
+   {
+    "currency": "dolar amerykański",
+    "code": "USD",
+    "mid": 3.6878
+   },
+   {
+    "currency": "euro",
+    "code": "EUR",
+    "mid": 4.2530
+   },
+   {
+    "currency": "frank szwajcarski",
+    "code": "CHF",
+    "mid": 4.6093
+   },
+   {
+    "currency": "funt szterling",
+    "code": "GBP",
+    "mid": 4.9284
+   },
+   {
+    "currency": "jen (Japonia)",
+    "code": "JPY",
+    "mid": 0.022972
+   }
+  ]
+ },
+ {
+  "table": "A",
+  "no": "112/A/NBP/2026",
+  "effectiveDate": "2026-06-12",
+  "rates": [
+   {
+    "currency": "dolar amerykański",
+    "code": "USD",
+    "mid": 3.6697
+   },
+   {
+    "currency": "euro",
+    "code": "EUR",
+    "mid": 4.2484
+   },
+   {
+    "currency": "frank szwajcarski",
+    "code": "CHF",
+    "mid": 4.6121
+   },
+   {
+    "currency": "funt szterling",
+    "code": "GBP",
+    "mid": 4.9223
+   },
+   {
+    "currency": "jen (Japonia)",
+    "code": "JPY",
+    "mid": 0.022923
+   }
+  ]
+ },
+ {
+  "table": "A",
+  "no": "113/A/NBP/2026",
+  "effectiveDate": "2026-06-15",
+  "rates": [
+   {
+    "currency": "dolar amerykański",
+    "code": "USD",
+    "mid": 3.6588
+   },
+   {
+    "currency": "euro",
+    "code": "EUR",
+    "mid": 4.2447
+   },
+   {
+    "currency": "frank szwajcarski",
+    "code": "CHF",
+    "mid": 4.6118
+   },
+   {
+    "currency": "funt szterling",
+    "code": "GBP",
+    "mid": 4.9111
+   },
+   {
+    "currency": "jen (Japonia)",
+    "code": "JPY",
+    "mid": 0.022847
+   }
+  ]
+ },
+ {
+  "table": "A",
+  "no": "114/A/NBP/2026",
+  "effectiveDate": "2026-06-16",
+  "rates": [
+   {
+    "currency": "dolar amerykański",
+    "code": "USD",
+    "mid": 3.6589
+   },
+   {
+    "currency": "euro",
+    "code": "EUR",
+    "mid": 4.2462
+   },
+   {
+    "currency": "frank szwajcarski",
+    "code": "CHF",
+    "mid": 4.6042
+   },
+   {
+    "currency": "funt szterling",
+    "code": "GBP",
+    "mid": 4.9115
+   },
+   {
+    "currency": "jen (Japonia)",
+    "code": "JPY",
+    "mid": 0.022821
+   }
+  ]
+ },
+ {
+  "table": "A",
+  "no": "115/A/NBP/2026",
+  "effectiveDate": "2026-06-17",
+  "rates": [
+   {
+    "currency": "dolar amerykański",
+    "code": "USD",
+    "mid": 3.6542
+   },
+   {
+    "currency": "euro",
+    "code": "EUR",
+    "mid": 4.2396
+   },
+   {
+    "currency": "frank szwajcarski",
+    "code": "CHF",
+    "mid": 4.6143
+   },
+   {
+    "currency": "funt szterling",
+    "code": "GBP",
+    "mid": 4.9027
+   },
+   {
+    "currency": "jen (Japonia)",
+    "code": "JPY",
+    "mid": 0.022809
+   }
+  ]
+ },
+ {
+  "table": "A",
+  "no": "116/A/NBP/2026",
+  "effectiveDate": "2026-06-18",
+  "rates": [
+   {
+    "currency": "dolar amerykański",
+    "code": "USD",
+    "mid": 3.7072
+   },
+   {
+    "currency": "euro",
+    "code": "EUR",
+    "mid": 4.2568
+   },
+   {
+    "currency": "frank szwajcarski",
+    "code": "CHF",
+    "mid": 4.6199
+   },
+   {
+    "currency": "funt szterling",
+    "code": "GBP",
+    "mid": 4.9101
+   },
+   {
+    "currency": "jen (Japonia)",
+    "code": "JPY",
+    "mid": 0.023058
+   }
+  ]
+ },
+ {
+  "table": "A",
+  "no": "117/A/NBP/2026",
+  "effectiveDate": "2026-06-19",
+  "rates": [
+   {
+    "currency": "dolar amerykański",
+    "code": "USD",
+    "mid": 3.7162
+   },
+   {
+    "currency": "euro",
+    "code": "EUR",
+    "mid": 4.2604
+   },
+   {
+    "currency": "frank szwajcarski",
+    "code": "CHF",
+    "mid": 4.6118
+   },
+   {
+    "currency": "funt szterling",
+    "code": "GBP",
+    "mid": 4.9176
+   },
+   {
+    "currency": "jen (Japonia)",
+    "code": "JPY",
+    "mid": 0.023041
+   }
+  ]
+ },
+ {
+  "table": "A",
+  "no": "118/A/NBP/2026",
+  "effectiveDate": "2026-06-22",
+  "rates": [
+   {
+    "currency": "dolar amerykański",
+    "code": "USD",
+    "mid": 3.7282
+   },
+   {
+    "currency": "euro",
+    "code": "EUR",
+    "mid": 4.2693
+   },
+   {
+    "currency": "frank szwajcarski",
+    "code": "CHF",
+    "mid": 4.6145
+   },
+   {
+    "currency": "funt szterling",
+    "code": "GBP",
+    "mid": 4.9234
+   },
+   {
+    "currency": "jen (Japonia)",
+    "code": "JPY",
+    "mid": 0.023047
+   }
+  ]
+ },
+ {
+  "table": "A",
+  "no": "119/A/NBP/2026",
+  "effectiveDate": "2026-06-23",
+  "rates": [
+   {
+    "currency": "dolar amerykański",
+    "code": "USD",
+    "mid": 3.7554
+   },
+   {
+    "currency": "euro",
+    "code": "EUR",
+    "mid": 4.2842
+   },
+   {
+    "currency": "frank szwajcarski",
+    "code": "CHF",
+    "mid": 4.6371
+   },
+   {
+    "currency": "funt szterling",
+    "code": "GBP",
+    "mid": 4.9646
+   },
+   {
+    "currency": "jen (Japonia)",
+    "code": "JPY",
+    "mid": 0.023263
+   }
+  ]
+ },
+ {
+  "table": "A",
+  "no": "120/A/NBP/2026",
+  "effectiveDate": "2026-06-24",
+  "rates": [
+   {
+    "currency": "dolar amerykański",
+    "code": "USD",
+    "mid": 3.7756
+   },
+   {
+    "currency": "euro",
+    "code": "EUR",
+    "mid": 4.2864
+   },
+   {
+    "currency": "frank szwajcarski",
+    "code": "CHF",
+    "mid": 4.6526
+   },
+   {
+    "currency": "funt szterling",
+    "code": "GBP",
+    "mid": 4.9810
+   },
+   {
+    "currency": "jen (Japonia)",
+    "code": "JPY",
+    "mid": 0.023342
+   }
+  ]
+ },
+ {
+  "table": "A",
+  "no": "121/A/NBP/2026",
+  "effectiveDate": "2026-06-25",
+  "rates": [
+   {
+    "currency": "dolar amerykański",
+    "code": "USD",
+    "mid": 3.7720
+   },
+   {
+    "currency": "euro",
+    "code": "EUR",
+    "mid": 4.2878
+   },
+   {
+    "currency": "frank szwajcarski",
+    "code": "CHF",
+    "mid": 4.6516
+   },
+   {
+    "currency": "funt szterling",
+    "code": "GBP",
+    "mid": 4.9754
+   },
+   {
+    "currency": "jen (Japonia)",
+    "code": "JPY",
+    "mid": 0.023313
+   }
+  ]
+ },
+ {
+  "table": "A",
+  "no": "122/A/NBP/2026",
+  "effectiveDate": "2026-06-26",
+  "rates": [
+   {
+    "currency": "dolar amerykański",
+    "code": "USD",
+    "mid": 3.7599
+   },
+   {
+    "currency": "euro",
+    "code": "EUR",
+    "mid": 4.2869
+   },
+   {
+    "currency": "frank szwajcarski",
+    "code": "CHF",
+    "mid": 4.6511
+   },
+   {
+    "currency": "funt szterling",
+    "code": "GBP",
+    "mid": 4.9695
+   },
+   {
+    "currency": "jen (Japonia)",
+    "code": "JPY",
+    "mid": 0.023269
+   }
+  ]
+ },
+ {
+  "table": "A",
+  "no": "123/A/NBP/2026",
+  "effectiveDate": "2026-06-29",
+  "rates": [
+   {
+    "currency": "dolar amerykański",
+    "code": "USD",
+    "mid": 3.7636
+   },
+   {
+    "currency": "euro",
+    "code": "EUR",
+    "mid": 4.2890
+   },
+   {
+    "currency": "frank szwajcarski",
+    "code": "CHF",
+    "mid": 4.6516
+   },
+   {
+    "currency": "funt szterling",
+    "code": "GBP",
+    "mid": 4.9707
+   },
+   {
+    "currency": "jen (Japonia)",
+    "code": "JPY",
+    "mid": 0.023254
+   }
+  ]
+ },
+ {
+  "table": "A",
+  "no": "124/A/NBP/2026",
+  "effectiveDate": "2026-06-30",
+  "rates": [
+   {
+    "currency": "dolar amerykański",
+    "code": "USD",
+    "mid": 3.7708
+   },
+   {
+    "currency": "euro",
+    "code": "EUR",
+    "mid": 4.2963
+   },
+   {
+    "currency": "frank szwajcarski",
+    "code": "CHF",
+    "mid": 4.6585
+   },
+   {
+    "currency": "funt szterling",
+    "code": "GBP",
+    "mid": 4.9887
+   },
+   {
+    "currency": "jen (Japonia)",
+    "code": "JPY",
+    "mid": 0.023231
+   }
+  ]
+ }
+]
