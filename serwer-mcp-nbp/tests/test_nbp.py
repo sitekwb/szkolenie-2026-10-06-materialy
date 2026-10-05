@@ -17,7 +17,7 @@ pytestmark = pytest.mark.anyio
 
 def client(fake: FakeNBP, clock: list[float] | None = None) -> NBPClient:
     now = clock if clock is not None else [0.0]
-    return NBPClient(nbp.create_http_client(fake.transport()), clock=lambda: now[0])
+    return NBPClient(nbp.create_http_client(fake.transport()), clock=lambda: now[0], retry_backoff_s=0)
 
 
 @pytest.mark.parametrize("value", ["eur", " EUR ", "Eur"])
@@ -185,3 +185,57 @@ async def test_allowlist_only_get_https_api_nbp(method: str, url: str) -> None:
 
 def test_redirects_disabled() -> None:
     assert nbp.create_http_client().follow_redirects is False
+
+
+@pytest.mark.parametrize("failure", ["outage", "timeout"])
+async def test_retry_once_after_transient_failure(failure: str) -> None:
+    fake = FakeNBP(transient_failures=1, failure=failure)  # type: ignore[arg-type]
+    r = await client(fake).rate("EUR", date(2026, 6, 12))
+    assert r.rate == Decimal("4.2484")
+    assert len(fake.requests) == 2
+
+
+@pytest.mark.parametrize("mode", ["outage", "timeout"])
+async def test_retry_gives_up_after_second_failure(mode: str) -> None:
+    fake = FakeNBP(mode=mode)  # type: ignore[arg-type]
+    with pytest.raises(RateError) as e:
+        await client(fake).rate("EUR", date(2026, 6, 12))
+    assert e.value.code is ErrorCode.NBP_UNAVAILABLE
+    assert len(fake.requests) == nbp.MAX_ATTEMPTS == 2
+
+
+@pytest.mark.parametrize("mode", ["empty", "garbage", "oversized"])
+async def test_no_retry_for_404_or_invalid_response(mode: str) -> None:
+    fake = FakeNBP(mode=mode)  # type: ignore[arg-type]
+    with pytest.raises(RateError):
+        await client(fake).rate("EUR", date(2026, 6, 12))
+    assert len(fake.requests) == 1
+
+
+async def test_no_retry_for_client_error() -> None:
+    def handler(request: httpx.Request) -> httpx.Response:
+        requests.append(request)
+        return httpx.Response(400, text="400 BadRequest")
+
+    requests: list[httpx.Request] = []
+    c = NBPClient(nbp.create_http_client(httpx.MockTransport(handler)), retry_backoff_s=0)
+    with pytest.raises(RateError) as e:
+        await c.rate("EUR", date(2026, 6, 12))
+    assert e.value.code is ErrorCode.NBP_UNAVAILABLE
+    assert len(requests) == 1
+
+
+async def test_retry_stays_within_deadline() -> None:
+    fake = FakeNBP(transient_failures=1)
+    c = NBPClient(nbp.create_http_client(fake.transport()), retry_backoff_s=5.0, deadline_s=0.05)
+    with pytest.raises(RateError) as e:
+        await c.rate("EUR", date(2026, 6, 12))
+    assert e.value.code is ErrorCode.NBP_UNAVAILABLE
+    assert "in time" in e.value.reason
+    assert len(fake.requests) == 1
+
+
+def test_retry_budget_fits_deadline() -> None:
+    assert nbp.TIMEOUT.read is not None
+    budget = nbp.MAX_ATTEMPTS * nbp.TIMEOUT.read + nbp.RETRY_BACKOFF_S
+    assert budget <= nbp.FETCH_DEADLINE_S

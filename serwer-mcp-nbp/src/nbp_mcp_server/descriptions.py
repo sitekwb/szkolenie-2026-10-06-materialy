@@ -12,7 +12,7 @@ import hashlib
 import json
 from typing import Final
 
-DESCRIPTIONS_VERSION: Final = "2.0.0"
+DESCRIPTIONS_VERSION: Final = "2.1.0"
 
 SERVER_INSTRUCTIONS: Final = (
     "This server only reads NBP average exchange rates (Table A, api.nbp.pl). "
@@ -40,7 +40,9 @@ CONVERT_TO_PLN: Final = (
 PORTFOLIO_VALUE: Final = (
     "Values in PLN the portfolio given in the argument (list of positions: currency and amount) at "
     "NBP average rates (Table A) of a given day, with forward-fill. Returns the value of each position "
-    "and the total. The server stores no portfolio. When any currency has no rate, the whole tool "
+    "rounded ROUND_HALF_UP to the grosz, and the total: the exact sum of the unrounded values rounded "
+    "once, so it may differ by a few grosz from the sum of the rounded positions. "
+    "The server stores no portfolio. When any currency has no rate, the whole tool "
     "returns an error instead of a partial total. Amounts positive, at most 50 positions."
 )
 

@@ -38,6 +38,12 @@ FORWARD_FILL_WINDOW_DAYS: Final = 14
 """How many days back to look for the last quote; the longest NBP holiday gaps are shorter."""
 MAX_RESPONSE_BYTES: Final = 1_000_000
 TIMEOUT: Final = httpx.Timeout(10.0, connect=5.0)
+MAX_ATTEMPTS: Final = 2
+"""One request plus one retry after an HTTP 5xx, a timeout or a connection error."""
+RETRY_BACKOFF_S: Final = 0.5
+"""Pause before the retry; short, so both attempts fit in ``FETCH_DEADLINE_S``."""
+FETCH_DEADLINE_S: Final = 21.0
+"""Overall deadline of one window fetch, retry included (two 10 s requests plus the backoff)."""
 TTL_CURRENT_S: Final = 600.0
 """TTL of a window that includes today: Table A is published once a day, but not at a fixed hour."""
 TTL_ARCHIVED_S: Final = 12 * 3600.0
@@ -98,6 +104,8 @@ class ErrorCode(StrEnum):
     NO_QUOTE = "no_quote"
     NBP_UNAVAILABLE = "nbp_unavailable"
     INVALID_NBP_RESPONSE = "invalid_nbp_response"
+    INVALID_POSITIONS = "invalid_positions"
+    INVALID_ARGUMENTS = "invalid_arguments"
 
 
 class RateError(Exception):
@@ -224,6 +232,14 @@ class RateResult:
     """``False`` when NBP did not respond and a stale cache entry was used."""
 
 
+class _TransientNBPError(Exception):
+    """An NBP failure worth one retry: HTTP 5xx, a timeout or a connection error."""
+
+    def __init__(self, reason: str) -> None:
+        super().__init__(reason)
+        self.reason = reason
+
+
 def _check_request(request: httpx.Request) -> None:
     """Security hook: GET only, HTTPS only, api.nbp.pl only (allowlist)."""
     if request.method != "GET" or request.url.scheme != "https" or request.url.host != NBP_HOST:
@@ -240,7 +256,7 @@ def create_http_client(transport: httpx.AsyncBaseTransport | None = None) -> htt
         base_url=BASE_URL,
         timeout=TIMEOUT,
         follow_redirects=False,
-        headers={"Accept": "application/json", "User-Agent": "nbp-mcp-server/2.0"},
+        headers={"Accept": "application/json", "User-Agent": "nbp-mcp-server/2.1"},
         event_hooks={"request": [hook]},
         transport=transport,
     )
@@ -258,6 +274,8 @@ class NBPClient:
     http: httpx.AsyncClient
     clock: Callable[[], float] = time.monotonic
     request_count: int = 0
+    retry_backoff_s: float = RETRY_BACKOFF_S
+    deadline_s: float = FETCH_DEADLINE_S
     _cache: OrderedDict[tuple[date, date], _CacheEntry] = field(default_factory=OrderedDict)
     _lock: asyncio.Lock = field(default_factory=asyncio.Lock)
 
@@ -266,7 +284,28 @@ class NBPClient:
         await self.http.aclose()
 
     async def _fetch_window(self, start: date, end: date) -> QuoteWindow:
-        """Fetch Table A for a date range; 404 means no quotes (not an error)."""
+        """Fetch Table A for a date range, retrying once after a transient failure.
+
+        Only HTTP 5xx, timeouts and connection errors are retried, after ``retry_backoff_s``.
+        A 404 (no quotes), other 4xx, an invalid response and a blocked request are final.
+        Both attempts together are bounded by ``deadline_s``.
+        """
+        try:
+            async with asyncio.timeout(self.deadline_s):
+                for attempt in range(1, MAX_ATTEMPTS + 1):
+                    try:
+                        return await self._fetch_once(start, end)
+                    except _TransientNBPError as error:
+                        if attempt == MAX_ATTEMPTS:
+                            raise RateError(ErrorCode.NBP_UNAVAILABLE, error.reason) from None
+                        log.warning("NBP transient failure (%s), retrying once", error.reason)
+                        await asyncio.sleep(self.retry_backoff_s)
+        except TimeoutError:
+            raise RateError(ErrorCode.NBP_UNAVAILABLE, "NBP did not respond in time.") from None
+        raise AssertionError("unreachable")  # pragma: no cover - the loop returns or raises
+
+    async def _fetch_once(self, start: date, end: date) -> QuoteWindow:
+        """Send one request for a date range; 404 means no quotes (not an error)."""
         if (end - start).days + 1 > MAX_QUERY_DAYS:  # pragma: no cover - the window constant is smaller
             raise ValueError("Range exceeds the NBP limit")
         path = f"exchangerates/tables/a/{start.isoformat()}/{end.isoformat()}/"
@@ -276,6 +315,8 @@ class NBPClient:
             async with self.http.stream("GET", path, params={"format": "json"}) as response:
                 if response.status_code == httpx.codes.NOT_FOUND:
                     return {}
+                if response.status_code >= httpx.codes.INTERNAL_SERVER_ERROR:
+                    raise _TransientNBPError(f"NBP responded with status {response.status_code}.")
                 if response.status_code != httpx.codes.OK:
                     raise RateError(
                         ErrorCode.NBP_UNAVAILABLE, f"NBP responded with status {response.status_code}."
@@ -287,7 +328,9 @@ class NBPClient:
                         raise RateError(
                             ErrorCode.INVALID_NBP_RESPONSE, "NBP response exceeds the size limit."
                         )
-        except httpx.HTTPError as error:
+        except (httpx.TimeoutException, httpx.NetworkError, httpx.ProxyError) as error:
+            raise _TransientNBPError(f"No connection to NBP ({type(error).__name__}).") from None
+        except httpx.HTTPError as error:  # includes the allowlist block (UnsupportedProtocol): final
             raise RateError(
                 ErrorCode.NBP_UNAVAILABLE, f"No connection to NBP ({type(error).__name__})."
             ) from None

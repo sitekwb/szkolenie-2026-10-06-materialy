@@ -34,8 +34,7 @@ jobs:
       - name: Install
         run: |
           python -m venv .venv
-          .venv/bin/pip install --upgrade pip
-          .venv/bin/pip install -e '.[dev]'
+          .venv/bin/pip install -c constraints.txt -e '.[dev]'
       - name: Lint (ruff)
         run: .venv/bin/ruff check . && .venv/bin/ruff format --check .
       - name: Types (mypy --strict)

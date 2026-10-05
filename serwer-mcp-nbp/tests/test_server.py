@@ -23,7 +23,7 @@ def fake() -> FakeNBP:
 
 @pytest.fixture
 async def mcp_client(fake: FakeNBP) -> AsyncIterator[Client]:
-    server = build_server(nbp.NBPClient(nbp.create_http_client(fake.transport())))
+    server = build_server(nbp.NBPClient(nbp.create_http_client(fake.transport()), retry_backoff_s=0))
     async with Client(server) as c:
         yield c
 
@@ -126,7 +126,8 @@ async def test_portfolio_value_single_request(mcp_client: Client, fake: FakeNBP)
     data = result.structured_content
     assert data is not None
     totals = [p["amount_pln"] for p in data["positions"]]
-    assert data["total_pln"] == str(sum(map(nbp.validate_amount, totals)))
+    exact = sum((Decimal(p["amount"]) * Decimal(p["rate"]) for p in data["positions"]), Decimal(0))
+    assert data["total_pln"] == str(nbp.round_to_grosz(exact))
     assert totals[0] == "4248.40"
     assert totals[2] == "100.10"
     assert len(fake.requests) == 1, "OG-09: one batch request for all currencies"
@@ -156,14 +157,66 @@ async def test_portfolio_value_validates_all_positions_before_request(
 
 
 @pytest.mark.parametrize(
-    "positions",
-    [[], [{"currency": "EUR", "amount": "1", "hidden": "x"}]],
-    ids=["empty", "extra-field"],
+    ("tool", "arguments", "code"),
+    [
+        ("portfolio_value", {"positions": []}, "invalid_positions"),
+        ("portfolio_value", {"positions": "SECRET_VALUE"}, "invalid_positions"),
+        (
+            "portfolio_value",
+            {"positions": [{"currency": "EUR", "amount": "1"}] * (nbp.MAX_PORTFOLIO_POSITIONS + 1)},
+            "invalid_positions",
+        ),
+        ("portfolio_value", {"positions": [{"currency": "EUR", "amount": 1}]}, "invalid_positions"),
+        (
+            "portfolio_value",
+            {"positions": [{"currency": "EUR", "amount": "1", "SECRET_VALUE": "x"}]},
+            "invalid_positions",
+        ),
+        ("portfolio_value", {}, "invalid_positions"),
+        (
+            "portfolio_value",
+            {"positions": [{"currency": "EUR", "amount": "1"}], "date": 20260612},
+            "invalid_date",
+        ),
+        ("convert_to_pln", {"amount": 7777.77, "currency": "EUR"}, "invalid_amount"),
+        ("convert_to_pln", {"amount": "1", "currency": ["SECRET_VALUE"]}, "invalid_currency"),
+        ("convert_to_pln", {}, "invalid_arguments"),
+        ("get_nbp_rate", {"currency": 978}, "invalid_currency"),
+    ],
+    ids=[
+        "empty",
+        "wrong-type",
+        "too-many",
+        "amount-not-text",
+        "extra-field",
+        "missing",
+        "date-not-text",
+        "convert-amount-number",
+        "convert-currency-list",
+        "convert-nothing",
+        "rate-currency-number",
+    ],
 )
-async def test_portfolio_value_schema_validation(mcp_client: Client, positions: list[dict[str, str]]) -> None:
-    result = await mcp_client.call_tool("portfolio_value", {"positions": positions})
-    assert result.is_error is True
-    assert "Traceback" not in text(result)
+async def test_schema_errors_are_structured(
+    mcp_client: Client, fake: FakeNBP, tool: str, arguments: dict[str, Any], code: str
+) -> None:
+    result = await mcp_client.call_tool(tool, arguments)
+    assert error(result)["error"] == code
+    raw = text(result)
+    for leak in ("SECRET_VALUE", "input_value", "pydantic", "validation error", "Traceback", "7777.77"):
+        assert leak not in raw, f"schema error leaks {leak!r}: {raw}"
+    assert fake.requests == [], "invalid input must not cost an NBP request"
+
+
+async def test_portfolio_total_rounded_once(mcp_client: Client) -> None:
+    positions = [{"currency": "EUR", "amount": "1"}] * nbp.MAX_PORTFOLIO_POSITIONS
+    result = await mcp_client.call_tool("portfolio_value", {"date": "2026-06-12", "positions": positions})
+    data = result.structured_content
+    assert data is not None
+    exact = sum((Decimal(p["amount"]) * Decimal(p["rate"]) for p in data["positions"]), Decimal(0))
+    assert data["total_pln"] == str(nbp.round_to_grosz(exact)) == "212.42"  # 50 x 4.2484 = 212.42
+    assert {p["amount_pln"] for p in data["positions"]} == {"4.25"}
+    assert sum(Decimal(p["amount_pln"]) for p in data["positions"]) == Decimal("212.50")
 
 
 async def test_unknown_write_tool(mcp_client: Client) -> None:
@@ -183,14 +236,6 @@ def test_refuses_to_start_with_model_key(variable: str, capsys: pytest.CaptureFi
 
 def test_empty_key_does_not_block() -> None:
     check_environment({"ANTHROPIC_API_KEY": "", "PATH": "/usr/bin"})
-
-
-async def test_portfolio_value_too_many_positions(mcp_client: Client, fake: FakeNBP) -> None:
-    positions = [{"currency": "EUR", "amount": "1"}] * (nbp.MAX_PORTFOLIO_POSITIONS + 1)
-    result = await mcp_client.call_tool("portfolio_value", {"positions": positions})
-    assert result.is_error is True
-    assert "Traceback" not in text(result)
-    assert fake.requests == [], "maxItems is enforced by schema validation before the tool runs"
 
 
 @pytest.mark.parametrize("amount", ["0", "-100"])

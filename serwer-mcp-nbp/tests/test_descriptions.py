@@ -27,6 +27,8 @@ REVIEWED_DIGESTS: dict[str, str] = {
     "1.1.0": "0923b3c23014bb4a36c9978686161702d6f092509bbac9fb7284f217758d9bc6",
     # 2.0.0: everything renamed to English, portfolio maxItems added to the input schema.
     "2.0.0": "c4b5fb8d5cb42b1cf459947f8000169e0dba7271e3b5c5fe647a8bc0b8fc748f",
+    # 2.1.0: portfolio total is the exact sum rounded once (tool and total_pln descriptions).
+    "2.1.0": "ee4d9ceacb7cacaf099233e2861f4b4ad446ed6af72b4b712b990c867f021022",
 }
 """Descriptions version -> SHA-256 of the tool manifest approved in code review. Append, do not overwrite."""
 

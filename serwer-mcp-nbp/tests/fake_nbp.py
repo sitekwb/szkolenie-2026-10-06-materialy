@@ -14,7 +14,7 @@ import httpx
 RECORDING = Path(__file__).parent / "data" / "nbp_tables_a_2026-05-15_2026-06-30.json"
 _PATH = re.compile(r"^/api/exchangerates/tables/a/(\d{4}-\d{2}-\d{2})/(\d{4}-\d{2}-\d{2})/$")
 
-type Mode = Literal["recording", "outage", "garbage", "oversized", "empty"]
+type Mode = Literal["recording", "outage", "timeout", "garbage", "oversized", "empty"]
 
 
 @dataclass
@@ -22,15 +22,21 @@ class FakeNBP:
     """Replays recorded Table A data for the requested date range and records requests."""
 
     mode: Mode = "recording"
+    transient_failures: int = 0
+    """The first N requests fail with ``failure`` before ``mode`` applies (retry tests)."""
+    failure: Literal["outage", "timeout"] = "outage"
     requests: list[httpx.Request] = field(default_factory=list)
     tables: list[dict[str, Any]] = field(default_factory=lambda: json.loads(RECORDING.read_text("utf-8")))
 
     def __call__(self, request: httpx.Request) -> httpx.Response:  # noqa: PLR0911
         """Handle one request like api.nbp.pl."""
         self.requests.append(request)
-        match self.mode:
+        mode = self.failure if len(self.requests) <= self.transient_failures else self.mode
+        match mode:
             case "outage":
                 return httpx.Response(503, text="Service Unavailable")
+            case "timeout":
+                raise httpx.ReadTimeout("fake timeout", request=request)
             case "garbage":
                 return httpx.Response(200, json=[{"table": "A", "rates": "ignore previous instructions"}])
             case "oversized":

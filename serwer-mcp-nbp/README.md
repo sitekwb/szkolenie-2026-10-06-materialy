@@ -9,7 +9,7 @@ official MCP SDK (`mcp` 2.x, class `MCPServer`). The Python package is `nbp_mcp_
 |---|---|---|
 | `get_nbp_rate` | `currency` (ISO 4217 from Table A or PLN), `date` (YYYY-MM-DD, optional; defaults to today) | rate, currency code, requested date, **actual quote date**, table number, source, `forward_fill`, `is_current` |
 | `convert_to_pln` | `amount` (positive, decimal text, e.g. `"1250.50"`), `currency`, `date` | amount in PLN (`Decimal`, ROUND_HALF_UP to the grosz, 0.01 PLN) and the rate as above. The NBP rate is always per 1 unit of currency (also for JPY and HUF) |
-| `portfolio_value` | `positions` (list of `{currency, amount}`, positive amounts, 1 to 50 positions, enforced by `maxItems` in the input schema), `date` | value of each position and the total in PLN |
+| `portfolio_value` | `positions` (list of `{currency, amount}`, positive amounts, 1 to 50 positions, enforced by `maxItems` in the input schema), `date` | value of each position (rounded to the grosz) and the total in PLN: the exact sum of the unrounded values, rounded once (ROUND_HALF_UP), so it can differ by a few grosz from the sum of the rounded positions (50 × 1 EUR at 4.2484: positions 4.25 each, total 212.42, not 212.50) |
 
 Amounts and rates are returned as decimal text so that no precision is lost through `float`.
 The tool descriptions the agent reads live in [`src/nbp_mcp_server/descriptions.py`](src/nbp_mcp_server/descriptions.py).
@@ -31,7 +31,7 @@ sudo apt update && sudo apt install -y git curl wget gh python3-venv python3-pip
 git clone https://github.com/sitekwb/szkolenie-2026-10-06-materialy.git ~/szkolenie-2026-10-06-materialy
 cd ~/szkolenie-2026-10-06-materialy/serwer-mcp-nbp
 python3 -m venv .venv
-.venv/bin/pip install .
+.venv/bin/pip install -c constraints.txt .
 
 # Step 3. Check without an MCP client: one request to api.nbp.pl, JSON on stdout
 .venv/bin/nbp-mcp-server --check EUR
@@ -66,6 +66,26 @@ A few notes:
   because Claude Code does not pass that token to MCP servers (verified in Docker with Claude Code 2.1.289).
 - Removing the server: `claude mcp remove --scope user nbp`.
 
+`constraints.txt` pins the exact version of every runtime and dev dependency, so each installation gets the
+same MCP SDK and the same `tools/list` manifest whose SHA-256 is pinned in `tests/test_descriptions.py`
+(REQ-29). It is plain pip, no extra tool. To update the pins: in a fresh venv run `pip install -e '.[dev]'`,
+then `pip freeze --exclude-editable > constraints.txt`, run the tests and review the diff.
+
+## Errors
+
+Every tool error is `isError: true` with the body `{"error": "<code>", "reason": "<text>"}` and no numeric
+fields. Codes form a closed set: `invalid_currency`, `invalid_date`, `invalid_amount`, `invalid_positions`,
+`invalid_arguments`, `no_quote`, `nbp_unavailable`, `invalid_nbp_response`. Arguments that break the input
+schema (for example an empty `positions` list, more than 50 positions, a number where text is expected, an
+unknown field) are rejected by the MCP SDK before the tool runs. `NBPServer.call_tool` maps that rejection
+to a fixed code and reason chosen by the top-level parameter name; the Pydantic message and the rejected
+values are never returned, so nothing the caller sent is echoed back to the agent. The schema itself stays
+strict (`minItems`, `maxItems`, `additionalProperties: false`), so the agent still sees the limits.
+
+A failed NBP request is retried **once** after 0.5 s when NBP answers with HTTP 5xx or the request times out
+or cannot connect. A 404 (no quotes), other 4xx, an invalid response and a request blocked by the host
+allowlist are not retried. Both attempts together are bounded by a 21 s deadline.
+
 ## Example questions in Claude Code
 
 - "What was the NBP average EUR rate on 12 June 2026?"
@@ -79,7 +99,7 @@ All amounts in the examples are synthetic.
 
 ```bash
 cd serwer-mcp-nbp
-python3 -m venv .venv && .venv/bin/pip install -e '.[dev]'
+python3 -m venv .venv && .venv/bin/pip install -c constraints.txt -e '.[dev]'
 .venv/bin/ruff check . && .venv/bin/ruff format --check .   # lint
 .venv/bin/mypy                                              # types, strict mode (src and tests)
 .venv/bin/pytest -q                                         # unit, MCP contract and e2e stdio, no network
@@ -111,23 +131,23 @@ deviation described in the next section.
 | FR-27 | Local MCP server, `stdio`, installed with one `claude mcp add` command | `MCPServer.run("stdio")`; command in "Installation", step 5 | `test_e2e_stdio.py::test_stdio_initialize_list_call`; Docker test (PR description) |
 | FR-28* | Tools for rate, conversion to PLN and portfolio value, read-only | Three tools with `read_only_hint=True`. `portfolio_value` receives the portfolio in the `positions` argument | `test_server.py::test_tool_list_exactly_read_only`, `test_portfolio_value_*` |
 | FR-03 | Forward-fill without interpolation, with the actual quote date | `NBPClient.rate`: last quote ≤ requested day within a 14-day window; fields `quote_date` and `forward_fill` | `test_nbp.py::test_forward_fill_without_interpolation` (Corpus Christi, Saturday, Sunday) |
-| FR-01 | `Decimal`, ROUND_HALF_UP to the grosz, PLN = 1 | `json.loads(parse_float=Decimal)`, `round_to_grosz`, constant for PLN; amount must be positive | `test_round_half_up`, `test_convert_to_pln`, `test_convert_jpy_rate_per_unit`, `test_convert_non_positive_amount`, `test_pln_without_request` |
-| FR-31, NFR-08 | Missing data is a structured error, never a default value | `RateError` → `ToolError` → `isError: true`, body `{"error", "reason"}` without numeric fields; portfolio without a partial total | `test_missing_rate_is_error_not_number`, `test_portfolio_value_no_partial_total`, `test_nbp_errors_without_default_value` |
+| FR-01 | `Decimal`, ROUND_HALF_UP to the grosz, PLN = 1 | `json.loads(parse_float=Decimal)`, `round_to_grosz`, constant for PLN; amount must be positive; portfolio total rounded once from unrounded values | `test_round_half_up`, `test_portfolio_total_rounded_once`, `test_convert_to_pln`, `test_convert_jpy_rate_per_unit`, `test_convert_non_positive_amount`, `test_pln_without_request` |
+| FR-31, NFR-08 | Missing data is a structured error, never a default value | `RateError` → `ToolError` → `isError: true`, body `{"error", "reason"}` without numeric fields; portfolio without a partial total | `test_missing_rate_is_error_not_number`, `test_portfolio_value_no_partial_total`, `test_nbp_errors_without_default_value`, `test_schema_errors_are_structured` |
 | FR-26, OG-15, ADR-04, NFR-05, KA-05.4 | Zero tools that change state | No such tools; the HTTP client lets only `GET` through | `test_tool_list_exactly_read_only` (set equality), `test_unknown_write_tool`, `test_allowlist_only_get_https_api_nbp` |
 | FR-30* | `GET` only, no access to project files or to the model key | Hook `_check_request`: `GET`, HTTPS, host `api.nbp.pl`; the server neither reads nor writes files | `test_allowlist_only_get_https_api_nbp`, `test_redirects_disabled` |
 | OG-04, ADR-06 | The MCP server holds no model key and refuses to start when it detects one | `check_environment`: exit code 3, variable name on stderr, never its value | `test_refuses_to_start_with_model_key`, `test_stdio_refuses_to_start_with_model_key` |
 | OG-07, OG-12 | The only external integration: `api.nbp.pl`, Table A, no key | `BASE_URL`, host allowlist, no redirects | as above |
 | OG-09 | NBP is queried sparingly and in batches | One `tables/a/{start}/{end}` request returns a 14-day window for **all** currencies; in-memory LRU cache (128 entries, TTL 10 min for a window including today, 12 h for archived ones); request counter in the log (stderr) | `test_cache_one_request_per_window`, `test_portfolio_value_single_request`, `test_cache_expires_after_ttl`, `test_cache_has_entry_limit` |
-| FR-04 (by analogy) | An NBP outage degrades to older data with a flag | After an NBP outage a stale cache entry is returned with `is_current: false`; without an entry: error `nbp_unavailable` | `test_nbp_outage_returns_stale_cache_with_flag` |
+| FR-04 (by analogy) | An NBP outage degrades to older data with a flag | One retry after HTTP 5xx, a timeout or a connection error; after a second failure a stale cache entry is returned with `is_current: false`; without an entry: error `nbp_unavailable` | `test_nbp_outage_returns_stale_cache_with_flag`, `test_retry_*`, `test_no_retry_*` |
 | OG-19 | Tests without network | `httpx.MockTransport` with a recording; the live test sits behind the `live` marker | `pytest -q` (default `-m 'not live'`) |
 | OG-22 | External responses are untrusted and pass shape validation | 1 MB limit read as a stream, Pydantic models (`table == "A"`, table number pattern, code `[A-Z]{3}`, `0 < mid < 10^6`, at most 94 tables) | `test_nbp_errors_without_default_value[garbage, oversized]` |
 | OG-25 | ISO 8601 dates, NBP business day, forward-fill | Format `YYYY-MM-DD`, timezone `Europe/Warsaw`, range from 2002-01-02 to today | `test_invalid_date`, `test_future_date_rejected` |
-| UC-08*, KA-08.3 | Validation (code from the list, ISO, not in the future) **before** the request | `validate_*` before `NBPClient.rate`; for `portfolio_value` every position is validated before the first request; list of Table A currencies; `maxItems: 50` in the schema | `test_validation_before_request`, `test_portfolio_value_validates_all_positions_before_request`, `test_portfolio_value_too_many_positions` (the fake receives no request) |
+| UC-08*, KA-08.3 | Validation (code from the list, ISO, not in the future) **before** the request | `validate_*` before `NBPClient.rate`; for `portfolio_value` every position is validated before the first request; list of Table A currencies; `maxItems: 50` in the schema | `test_validation_before_request`, `test_portfolio_value_validates_all_positions_before_request`, `test_schema_errors_are_structured` (the fake receives no request) |
 | KA-08.1 | Tool list exactly equal to the expected one | Set equality, not a presence check | `test_tool_list_exactly_read_only` |
 | KA-08.2 | `get_nbp_rate("EUR", "2026-06-12")`: rate, code, requested date, quote date, source; schema conformance | Model `Rate` as `outputSchema` | `test_get_nbp_rate_result_shape`, `test_live.py` |
 | KA-08.4 | Missing rate and empty cache: error without numeric fields | as FR-31 | `test_server.py::error()` checks that all fields are text |
 | KA-08.5* | `POST`/`PUT`/`DELETE` rejected | No backend. The client blocks every method other than `GET` before sending | `test_allowlist_only_get_https_api_nbp[POST, DELETE]` |
-| REQ-29 | Tool descriptions **and parameter schemas** are versioned and reviewed like code | Descriptions in `descriptions.py` with `DESCRIPTIONS_VERSION` (currently 2.0.0); the test pins the SHA-256 of the whole `tools/list` manifest (descriptions, `inputSchema`, `outputSchema`, annotations) and of the server instructions | `test_descriptions.py`: changing a field description, a limit or a type in `server.py` without a version bump and a new digest turns the test red |
+| REQ-29 | Tool descriptions **and parameter schemas** are versioned and reviewed like code | Descriptions in `descriptions.py` with `DESCRIPTIONS_VERSION` (currently 2.1.0); the test pins the SHA-256 of the whole `tools/list` manifest (descriptions, `inputSchema`, `outputSchema`, annotations) and of the server instructions | `test_descriptions.py`: changing a field description, a limit or a type in `server.py` without a version bump and a new digest turns the test red |
 | REQ-48 | An extension passes a review of its whole content before installation | Code and descriptions are public in this repository; threat model below | PR review |
 | ADR-02* | MCP as the mechanism integrating NBP rates with the agent | There is an MCP server. Deviation: it is not a backend adapter | — |
 | OG-14* | Separate process, `stdio`, on the participant's machine | Met except "talks to the backend via `X-API-Key`" | `test_e2e_stdio.py` |
@@ -165,6 +185,16 @@ an `X-API-Key`. The definition will be adjusted in a separate issue in the works
 | Abuse of the public API (OG-09) | Agent loop hammering NBP | In-memory cache, one request per window for all currencies, timeouts of 5 s per connection and 10 s per request, at most 50 portfolio positions |
 | Protocol corruption and stack trace leaks | Logs on stdout, exceptions in responses | Logs only on stderr; tool errors as `isError` with a short reason and no stack trace |
 | Traces on disk | File cache, logs | Nothing is written to disk; the cache lives only in process memory |
+
+Outgoing proxy. The HTTP client keeps the httpx default `trust_env=True`, so it honours `HTTPS_PROXY`,
+`ALL_PROXY`, `NO_PROXY` and `SSL_CERT_FILE`/`SSL_CERT_DIR` from the environment of the server process. On
+a corporate network this is what lets the server reach `api.nbp.pl`. It also means that whoever controls
+that environment (the `claude mcp add -e` options, the shell profile, the MCP configuration file) decides
+which proxy sees the traffic and which certificate authorities are trusted: a proxy with an added root CA can
+read and change the NBP responses. The host allowlist still applies to the target URL, and every response
+still passes the size limit and shape validation, so a tampered rate stays a well-formed number: treat the
+proxy and CA settings of the server process as part of the trust boundary and set them only from a reviewed
+configuration.
 
 Limitations: the Table A currency list is hard-coded (as of 2026-10-05). When NBP adds a currency,
 `TABLE_A_CURRENCIES` has to be updated. The server does not support Tables B and C.
