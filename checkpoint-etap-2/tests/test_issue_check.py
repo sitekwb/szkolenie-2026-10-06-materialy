@@ -15,6 +15,7 @@ import os
 import re
 import subprocess
 import sys
+import time
 from pathlib import Path
 from types import ModuleType
 
@@ -53,6 +54,7 @@ ZLE: dict[str, str] = {
     "zly-placeholder-z-szablonu.md": "placeholder",
     "zly-duplikat-sekcji.md": "duplikat",
     "zly-wstrzykniecie-powloki.md": "oczekiwany-wynik",
+    "zly-etykieta-stanu-bez-nazwy.md": "etykieta-stanu",
 }
 DOBRE: tuple[str, ...] = ("dobry.md", "dobry-z-formularza.md")
 
@@ -314,3 +316,81 @@ def test_workflow_nie_interpoluje_tresci_issue() -> None:
         r"^permissions:\n  issues: read\n  contents: read\n", tekst, re.MULTILINE
     )
     assert "write" not in tekst
+
+
+# --------------------------------------------------------------------------- #
+# Etykieta stanu: wielkość liter i pusta nazwa
+# --------------------------------------------------------------------------- #
+
+
+@pytest.mark.parametrize(
+    ("etykiety", "przechodzi"),
+    [
+        (("state:a",), True),
+        (("State:a",), True),
+        (("state:a", "State:b"), False),
+        (("STATE:a", "state:b"), False),
+        (("state:",), False),
+        (("State:  ",), False),
+    ],
+)
+def test_etykieta_stanu_bez_rozrozniania_wielkosci_liter(
+    etykiety: tuple[str, ...], przechodzi: bool
+) -> None:
+    """Prefiks porównywany bez wielkości liter; nazwa po prefiksie niepusta."""
+    issue = ic.wczytaj_markdown(ISSUES / "dobry.md")
+    wynik = ic.sprawdz(ic.Issue(issue.body, etykiety, None, "test"))
+    assert wynik.przechodzi is przechodzi, wynik.naruszenia
+
+
+def test_para_etykiet_stanu_rozna_wielkosc_liter_przez_cli(tmp_path: Path) -> None:
+    """``state:a`` + ``State:b`` to dwie etykiety stanu: exit 1."""
+    tekst = (ISSUES / "dobry.md").read_text(encoding="utf-8")
+    plik = tmp_path / "para.md"
+    plik.write_text(
+        tekst.replace('"state:nowe"', '"state:a", "State:b"', 1), encoding="utf-8"
+    )
+    wynik = uruchom(plik, cwd=tmp_path)
+    assert wynik.returncode == 1
+    assert "[etykieta-stanu]" in wynik.stderr
+
+
+# --------------------------------------------------------------------------- #
+# ReDoS: regexy działają w czasie liniowym na złośliwej treści
+# --------------------------------------------------------------------------- #
+
+LIMIT_S = 1.0
+
+
+def _czas(body: str) -> float:
+    """Zmierz czas pełnej walidacji ``body`` (wszystkie reguły)."""
+    issue = ic.Issue(body, ("state:a",), None, "redos")
+    start = time.perf_counter()
+    ic.sprawdz(issue)
+    return time.perf_counter() - start
+
+
+SPACJE = " " * 100_000
+
+
+@pytest.mark.parametrize(
+    ("opis", "body"),
+    [
+        ("naglowek-100k-spacji", f"## a{SPACJE}x\n"),
+        ("naglowek-100k-spacji-dwukropek", f"## a{SPACJE}:\n"),
+        (
+            "kryterium-100k-spacji",
+            f"## Kryteria akceptacji\n```bash\nls{SPACJE}#{SPACJE}\n```\n",
+        ),
+        (
+            "kryterium-wiele-hashy",
+            "## Kryteria akceptacji\n```bash\n" + " # " * 50_000 + "\n```\n",
+        ),
+        ("ogrodzenie-100k", f"## Cel\n{SPACJE}" + "`" * 100_000 + f"{SPACJE}\n"),
+        ("body-1MB", (ISSUES / "dobry.md").read_text(encoding="utf-8") * 1_000),
+    ],
+)
+def test_redos_czas_liniowy(opis: str, body: str) -> None:
+    """Złośliwa treść issue nie może zająć joba: każda walidacja < 1 s."""
+    assert len(body) >= 100_000, opis
+    assert _czas(body) < LIMIT_S, opis

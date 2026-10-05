@@ -53,16 +53,19 @@ DOMYSLNY_PLIK_KONFIGURACJI: Final[Path] = Path(".github/issue-check.json")
 #: Placeholder, którym GitHub wypełnia niewypełnione pole formularza.
 PUSTA_ODPOWIEDZ: Final[str] = "_no response_"
 
-#: Nagłówek sekcji: poziom 2 lub 3 (formularz GitHub renderuje ``###``).
-WZ_NAGLOWEK: Final[re.Pattern[str]] = re.compile(r"^(#{2,3})\s+(.+?)\s*:?\s*$")
+#: Regexy są liniowe: kwantyfikatory zaborcze (``++``, ``*+``) i brak sąsiadujących
+#: kwantyfikatorów o wspólnym alfabecie, bo treść issue to dane niezaufane (ReDoS).
+#: Nagłówek sekcji: poziom 2 lub 3 (formularz GitHub renderuje ``###``); końcowe
+#: spacje i dwukropek obcina kod (``strip``), nie regex.
+WZ_NAGLOWEK: Final[re.Pattern[str]] = re.compile(r"^(#{2,3})\s++(.*)$")
 
 #: Ogrodzenie bloku kodu ``` lub ~~~ z opcjonalną nazwą języka.
 WZ_PLOT: Final[re.Pattern[str]] = re.compile(
-    r"^\s*(?P<plot>```+|~~~+)\s*(?P<jezyk>[\w+-]*)"
+    r"^\s*+(?P<plot>`{3,}+|~{3,}+)\s*+(?P<jezyk>[\w+-]*+)"
 )
 
 #: Oczekiwany wynik: ``<komenda>  # <opis>`` (co najmniej jedna spacja przed ``#``).
-WZ_OCZEKIWANY: Final[re.Pattern[str]] = re.compile(r"\s#\s+\S")
+WZ_OCZEKIWANY: Final[re.Pattern[str]] = re.compile(r"\s#\s++\S")
 
 
 class Kod(IntEnum):
@@ -297,7 +300,7 @@ def podziel_na_sekcje(body: str) -> tuple[dict[str, list[str]], list[str]]:
         if WZ_PLOT.match(linia):
             w_bloku = not w_bloku
         elif not w_bloku and (naglowek := WZ_NAGLOWEK.match(linia)):
-            biezaca = naglowek.group(2).strip()
+            biezaca = naglowek.group(2).strip().rstrip(":").strip()
             if biezaca in sekcje and biezaca not in duplikaty:
                 duplikaty.append(biezaca)
             sekcje.setdefault(biezaca, [])
@@ -406,7 +409,11 @@ def _oczekiwany_wynik(issue: Issue, k: Konfiguracja) -> Iterator[str]:
 def _etykieta_stanu(issue: Issue, k: Konfiguracja) -> Iterator[str]:
     if not k.wymagaj_etykiety_stanu:
         return
-    stany = [e for e in issue.labels if e.startswith(k.prefiks_stanu)]
+    prefiks = k.prefiks_stanu.casefold()
+    stany = [e for e in issue.labels if e.casefold().startswith(prefiks)]
+    if puste := [e for e in stany if not e.casefold()[len(prefiks) :].strip()]:
+        yield f"etykieta stanu bez nazwy po prefiksie: {', '.join(puste)}"
+        return
     match stany:
         case [_]:
             pass
