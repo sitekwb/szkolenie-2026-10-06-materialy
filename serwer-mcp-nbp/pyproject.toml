@@ -3,9 +3,9 @@ requires = ["hatchling>=1.27"]
 build-backend = "hatchling.build"
 
 [project]
-name = "serwer-mcp-nbp"
-version = "1.0.0"
-description = "Serwer MCP (stdio) z kursami średnimi NBP, tabela A, wyłącznie do odczytu."
+name = "nbp-mcp-server"
+version = "2.0.0"
+description = "MCP server (stdio) with NBP average exchange rates, Table A, read-only."
 readme = "README.md"
 license = "MIT"
 authors = [{ name = "Wojciech Sitek" }]
@@ -25,14 +25,14 @@ dev = [
 ]
 
 [project.scripts]
-serwer-mcp-nbp = "serwer_mcp_nbp.serwer:main"
+nbp-mcp-server = "nbp_mcp_server.server:main"
 
 [tool.hatch.build.targets.wheel]
-packages = ["src/serwer_mcp_nbp"]
+packages = ["src/nbp_mcp_server"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
-markers = ["live: test sięga do prawdziwego api.nbp.pl (domyślnie pomijany, uruchom: pytest -m live)"]
+markers = ["live: test reaches the real api.nbp.pl (skipped by default, run: pytest -m live)"]
 addopts = "-m 'not live'"
 
 [tool.ruff]

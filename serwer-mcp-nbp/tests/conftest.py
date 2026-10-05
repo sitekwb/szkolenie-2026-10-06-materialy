@@ -1,9 +1,9 @@
-"""Wspólna konfiguracja testów: pętla asyncio przez wtyczkę pytest z anyio."""
+"""Shared test configuration: asyncio event loop via the anyio pytest plugin."""
 
 import pytest
 
 
 @pytest.fixture
 def anyio_backend() -> str:
-    """Testy asynchroniczne działają na asyncio (jak serwer)."""
+    """Async tests run on asyncio (same as the server)."""
     return "asyncio"

@@ -1,4 +1,4 @@
-"""Testy jednostkowe klienta NBP: walidacja, forward-fill, cache, granica zaufania (bez sieci)."""
+"""Unit tests of the NBP client: validation, forward-fill, cache, trust boundary (no network)."""
 
 from __future__ import annotations
 
@@ -7,77 +7,73 @@ from decimal import Decimal
 
 import httpx
 import pytest
-from atrapa_nbp import AtrapaNBP
+from fake_nbp import FakeNBP
 
-from serwer_mcp_nbp import nbp
-from serwer_mcp_nbp.nbp import BladKursu, KlientNBP, KodBledu
+from nbp_mcp_server import nbp
+from nbp_mcp_server.nbp import ErrorCode, NBPClient, RateError
 
 pytestmark = pytest.mark.anyio
 
 
-def klient(atrapa: AtrapaNBP, zegar: list[float] | None = None) -> KlientNBP:
-    czas = zegar if zegar is not None else [0.0]
-    return KlientNBP(nbp.utworz_klienta_http(atrapa.transport()), zegar=lambda: czas[0])
+def client(fake: FakeNBP, clock: list[float] | None = None) -> NBPClient:
+    now = clock if clock is not None else [0.0]
+    return NBPClient(nbp.create_http_client(fake.transport()), clock=lambda: now[0])
 
 
-@pytest.mark.parametrize("wejscie", ["eur", " EUR ", "Eur"])
-def test_waluta_normalizowana(wejscie: str) -> None:
-    assert nbp.waliduj_walute(wejscie) == "EUR"
+@pytest.mark.parametrize("value", ["eur", " EUR ", "Eur"])
+def test_currency_normalized(value: str) -> None:
+    assert nbp.validate_currency(value) == "EUR"
 
 
-@pytest.mark.parametrize("wejscie", ["", "EURO", "XYZ", "BTC", "E1R", "PLN;rm -rf"])
-def test_waluta_spoza_tabeli_odrzucona(wejscie: str) -> None:
-    with pytest.raises(BladKursu) as e:
-        nbp.waliduj_walute(wejscie)
-    assert e.value.kod is KodBledu.NIEPRAWIDLOWA_WALUTA
-
-
-@pytest.mark.parametrize(
-    "wejscie", ["2026-13-01", "2026-02-30", "12.06.2026", "2026-6-12", "dzisiaj", "2001-12-31"]
-)
-def test_nieprawidlowa_data(wejscie: str) -> None:
-    with pytest.raises(BladKursu) as e:
-        nbp.waliduj_date(wejscie)
-    assert e.value.kod is KodBledu.NIEPRAWIDLOWA_DATA
-
-
-def test_data_z_przyszlosci_odrzucona() -> None:
-    jutro = (nbp.dzisiaj() + timedelta(days=1)).isoformat()
-    with pytest.raises(BladKursu, match="przyszłości"):
-        nbp.waliduj_date(jutro)
-
-
-def test_brak_daty_to_dzisiaj() -> None:
-    assert nbp.waliduj_date(None) == nbp.dzisiaj()
-    assert nbp.waliduj_date("  ") == nbp.dzisiaj()
+@pytest.mark.parametrize("value", ["", "EURO", "XYZ", "BTC", "E1R", "PLN;rm -rf"])
+def test_currency_outside_table_rejected(value: str) -> None:
+    with pytest.raises(RateError) as e:
+        nbp.validate_currency(value)
+    assert e.value.code is ErrorCode.INVALID_CURRENCY
 
 
 @pytest.mark.parametrize(
-    ("wejscie", "oczekiwane"), [("1250.50", "1250.50"), ("10", "10"), ("0.0001", "0.0001")]
+    "value", ["2026-13-01", "2026-02-30", "12.06.2026", "2026-6-12", "today", "2001-12-31"]
 )
-def test_kwota(wejscie: str, oczekiwane: str) -> None:
-    assert nbp.waliduj_kwote(wejscie) == Decimal(oczekiwane)
+def test_invalid_date(value: str) -> None:
+    with pytest.raises(RateError) as e:
+        nbp.validate_date(value)
+    assert e.value.code is ErrorCode.INVALID_DATE
+
+
+def test_future_date_rejected() -> None:
+    tomorrow = (nbp.today() + timedelta(days=1)).isoformat()
+    with pytest.raises(RateError, match="future"):
+        nbp.validate_date(tomorrow)
+
+
+def test_missing_date_means_today() -> None:
+    assert nbp.validate_date(None) == nbp.today()
+    assert nbp.validate_date("  ") == nbp.today()
+
+
+@pytest.mark.parametrize(("value", "expected"), [("1250.50", "1250.50"), ("10", "10"), ("0.0001", "0.0001")])
+def test_amount(value: str, expected: str) -> None:
+    assert nbp.validate_amount(value) == Decimal(expected)
 
 
 @pytest.mark.parametrize(
-    "wejscie", ["1,5", "1e9", "NaN", "Infinity", "0.00001", "1" * 16, "", "0", "0.00", "-10"]
+    "value", ["1,5", "1e9", "NaN", "Infinity", "0.00001", "1" * 16, "", "0", "0.00", "-10"]
 )
-def test_nieprawidlowa_kwota(wejscie: str) -> None:
-    with pytest.raises(BladKursu) as e:
-        nbp.waliduj_kwote(wejscie)
-    assert e.value.kod is KodBledu.NIEPRAWIDLOWA_KWOTA
+def test_invalid_amount(value: str) -> None:
+    with pytest.raises(RateError) as e:
+        nbp.validate_amount(value)
+    assert e.value.code is ErrorCode.INVALID_AMOUNT
 
 
-@pytest.mark.parametrize(
-    ("wejscie", "oczekiwane"), [("0.005", "0.01"), ("0.004", "0.00"), ("-0.005", "-0.01")]
-)
-def test_round_half_up(wejscie: str, oczekiwane: str) -> None:
-    assert nbp.na_grosze(Decimal(wejscie)) == Decimal(oczekiwane)
+@pytest.mark.parametrize(("value", "expected"), [("0.005", "0.01"), ("0.004", "0.00"), ("-0.005", "-0.01")])
+def test_round_half_up(value: str, expected: str) -> None:
+    assert nbp.round_to_grosz(Decimal(value)) == Decimal(expected)
 
 
-async def test_kurs_z_dnia_notowania() -> None:
-    w = await klient(AtrapaNBP()).kurs("EUR", date(2026, 6, 12))
-    assert (w.kurs, w.data_notowania, w.numer_tabeli) == (
+async def test_rate_on_quote_day() -> None:
+    r = await client(FakeNBP()).rate("EUR", date(2026, 6, 12))
+    assert (r.rate, r.quote_date, r.table_number) == (
         Decimal("4.2484"),
         date(2026, 6, 12),
         "112/A/NBP/2026",
@@ -85,92 +81,92 @@ async def test_kurs_z_dnia_notowania() -> None:
 
 
 @pytest.mark.parametrize(
-    ("dzien", "notowanie"),
+    ("day", "quote_day"),
     [
         (date(2026, 6, 4), date(2026, 6, 3)),
         (date(2026, 6, 13), date(2026, 6, 12)),
         (date(2026, 6, 14), date(2026, 6, 12)),
     ],
-    ids=["boze-cialo", "sobota", "niedziela"],
+    ids=["corpus-christi", "saturday", "sunday"],
 )
-async def test_forward_fill_bez_interpolacji(dzien: date, notowanie: date) -> None:
-    atrapa = AtrapaNBP()
-    k = klient(atrapa)
-    w = await k.kurs("EUR", dzien)
-    poprzedni = await k.kurs("EUR", notowanie)
-    assert w.data_zadana == dzien
-    assert w.data_notowania == notowanie
-    assert w.kurs == poprzedni.kurs
+async def test_forward_fill_without_interpolation(day: date, quote_day: date) -> None:
+    fake = FakeNBP()
+    c = client(fake)
+    r = await c.rate("EUR", day)
+    previous = await c.rate("EUR", quote_day)
+    assert r.requested_date == day
+    assert r.quote_date == quote_day
+    assert r.rate == previous.rate
 
 
-async def test_pln_bez_zapytania() -> None:
-    atrapa = AtrapaNBP()
-    w = await klient(atrapa).kurs("PLN", date(2026, 6, 13))
-    assert w.kurs == 1
-    assert atrapa.zadania == []
+async def test_pln_without_request() -> None:
+    fake = FakeNBP()
+    r = await client(fake).rate("PLN", date(2026, 6, 13))
+    assert r.rate == 1
+    assert fake.requests == []
 
 
-async def test_cache_jedno_zapytanie_na_okno() -> None:
-    atrapa = AtrapaNBP()
-    k = klient(atrapa)
-    for waluta in ("EUR", "USD", "CHF", "GBP", "EUR"):
-        await k.kurs(waluta, date(2026, 6, 12))
-    assert len(atrapa.zadania) == 1
-    assert atrapa.zadania[0].url.path == "/api/exchangerates/tables/a/2026-05-30/2026-06-12/"
+async def test_cache_one_request_per_window() -> None:
+    fake = FakeNBP()
+    c = client(fake)
+    for currency in ("EUR", "USD", "CHF", "GBP", "EUR"):
+        await c.rate(currency, date(2026, 6, 12))
+    assert len(fake.requests) == 1
+    assert fake.requests[0].url.path == "/api/exchangerates/tables/a/2026-05-30/2026-06-12/"
 
 
-async def test_cache_wygasa_po_ttl() -> None:
-    atrapa, czas = AtrapaNBP(), [0.0]
-    k = klient(atrapa, czas)
-    await k.kurs("EUR", date(2026, 6, 12))
-    czas[0] = nbp.TTL_ARCHIWALNE_S + 1
-    await k.kurs("EUR", date(2026, 6, 12))
-    assert len(atrapa.zadania) == 2
+async def test_cache_expires_after_ttl() -> None:
+    fake, now = FakeNBP(), [0.0]
+    c = client(fake, now)
+    await c.rate("EUR", date(2026, 6, 12))
+    now[0] = nbp.TTL_ARCHIVED_S + 1
+    await c.rate("EUR", date(2026, 6, 12))
+    assert len(fake.requests) == 2
 
 
-async def test_cache_ma_limit_wpisow() -> None:
-    k = klient(AtrapaNBP())
-    for i in range(nbp.MAKS_WPISOW_CACHE + 5):
-        await k.okno_do(date(2026, 1, 1) + timedelta(days=i))
-    assert len(k._cache) == nbp.MAKS_WPISOW_CACHE
+async def test_cache_has_entry_limit() -> None:
+    c = client(FakeNBP())
+    for i in range(nbp.MAX_CACHE_ENTRIES + 5):
+        await c.window_until(date(2026, 1, 1) + timedelta(days=i))
+    assert len(c._cache) == nbp.MAX_CACHE_ENTRIES
 
 
-async def test_awaria_nbp_daje_przeterminowany_cache_z_flaga() -> None:
-    atrapa, czas = AtrapaNBP(), [0.0]
-    k = klient(atrapa, czas)
-    await k.kurs("EUR", date(2026, 6, 12))
-    atrapa.tryb, czas[0] = "awaria", nbp.TTL_ARCHIWALNE_S + 1
-    w = await k.kurs("EUR", date(2026, 6, 12))
-    assert w.dane_aktualne is False
-    assert w.kurs == Decimal("4.2484")
+async def test_nbp_outage_returns_stale_cache_with_flag() -> None:
+    fake, now = FakeNBP(), [0.0]
+    c = client(fake, now)
+    await c.rate("EUR", date(2026, 6, 12))
+    fake.mode, now[0] = "outage", nbp.TTL_ARCHIVED_S + 1
+    r = await c.rate("EUR", date(2026, 6, 12))
+    assert r.is_current is False
+    assert r.rate == Decimal("4.2484")
 
 
 @pytest.mark.parametrize(
-    ("tryb", "kod"),
+    ("mode", "code"),
     [
-        ("awaria", KodBledu.NBP_NIEDOSTEPNE),
-        ("smieci", KodBledu.NIEPRAWIDLOWA_ODPOWIEDZ_NBP),
-        ("za_duzo", KodBledu.NIEPRAWIDLOWA_ODPOWIEDZ_NBP),
-        ("puste", KodBledu.BRAK_NOTOWANIA),
+        ("outage", ErrorCode.NBP_UNAVAILABLE),
+        ("garbage", ErrorCode.INVALID_NBP_RESPONSE),
+        ("oversized", ErrorCode.INVALID_NBP_RESPONSE),
+        ("empty", ErrorCode.NO_QUOTE),
     ],
 )
-async def test_bledy_nbp_bez_wartosci_domyslnej(tryb: str, kod: KodBledu) -> None:
-    atrapa = AtrapaNBP()
-    atrapa.tryb = tryb  # type: ignore[assignment]
-    with pytest.raises(BladKursu) as e:
-        await klient(atrapa).kurs("EUR", date(2026, 6, 12))
-    assert e.value.kod is kod
-    assert "{" not in e.value.powod
+async def test_nbp_errors_without_default_value(mode: str, code: ErrorCode) -> None:
+    fake = FakeNBP()
+    fake.mode = mode  # type: ignore[assignment]
+    with pytest.raises(RateError) as e:
+        await client(fake).rate("EUR", date(2026, 6, 12))
+    assert e.value.code is code
+    assert "{" not in e.value.reason
 
 
-async def test_waluta_bez_notowania_w_oknie() -> None:
-    with pytest.raises(BladKursu) as e:
-        await klient(AtrapaNBP()).kurs("THB", date(2026, 6, 12))
-    assert e.value.kod is KodBledu.BRAK_NOTOWANIA
+async def test_currency_without_quote_in_window() -> None:
+    with pytest.raises(RateError) as e:
+        await client(FakeNBP()).rate("THB", date(2026, 6, 12))
+    assert e.value.code is ErrorCode.NO_QUOTE
 
 
 @pytest.mark.parametrize(
-    ("metoda", "url"),
+    ("method", "url"),
     [
         ("POST", "https://api.nbp.pl/api/exchangerates/tables/a/"),
         ("DELETE", "https://api.nbp.pl/api/exchangerates/tables/a/"),
@@ -179,13 +175,13 @@ async def test_waluta_bez_notowania_w_oknie() -> None:
         ("GET", "https://api.nbp.pl.evil.example/api/"),
     ],
 )
-async def test_allowlista_tylko_get_https_api_nbp(metoda: str, url: str) -> None:
-    atrapa = AtrapaNBP()
-    http = nbp.utworz_klienta_http(atrapa.transport())
-    with pytest.raises(httpx.UnsupportedProtocol, match="Zablokowane"):
-        await http.request(metoda, url)
-    assert atrapa.zadania == []
+async def test_allowlist_only_get_https_api_nbp(method: str, url: str) -> None:
+    fake = FakeNBP()
+    http = nbp.create_http_client(fake.transport())
+    with pytest.raises(httpx.UnsupportedProtocol, match="Blocked"):
+        await http.request(method, url)
+    assert fake.requests == []
 
 
-def test_przekierowania_wylaczone() -> None:
-    assert nbp.utworz_klienta_http().follow_redirects is False
+def test_redirects_disabled() -> None:
+    assert nbp.create_http_client().follow_redirects is False

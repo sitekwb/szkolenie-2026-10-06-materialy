@@ -1,4 +1,4 @@
-"""Test na żywo z prawdziwym api.nbp.pl (pomijany domyślnie; uruchom: ``pytest -m live``)."""
+"""Live test against the real api.nbp.pl (skipped by default; run with ``pytest -m live``)."""
 
 from __future__ import annotations
 
@@ -12,22 +12,22 @@ from mcp import Client, StdioServerParameters
 pytestmark = [pytest.mark.live, pytest.mark.anyio]
 
 
-async def test_live_stdio_prawdziwe_nbp() -> None:
-    parametry = StdioServerParameters(
-        command=sys.executable, args=["-m", "serwer_mcp_nbp"], cwd=Path(__file__).parent
+async def test_live_stdio_real_nbp() -> None:
+    params = StdioServerParameters(
+        command=sys.executable, args=["-m", "nbp_mcp_server"], cwd=Path(__file__).parent
     )
-    async with Client(parametry, mode="legacy") as c:
-        kurs = await c.call_tool("kurs_nbp", {"waluta": "EUR", "data": "2026-06-12"})
-        assert kurs.structured_content is not None
-        assert kurs.structured_content["kurs"] == "4.2484"
-        assert kurs.structured_content["numer_tabeli"] == "112/A/NBP/2026"
-        dzis = await c.call_tool("kurs_nbp", {"waluta": "USD"})
-        assert dzis.is_error is False, dzis.content
-        assert dzis.structured_content is not None
-        assert date.fromisoformat(dzis.structured_content["data_notowania"]) <= date.today()
-        portfel = await c.call_tool(
-            "wartosc_portfela",
-            {"pozycje": [{"waluta": "EUR", "kwota": "1000"}, {"waluta": "JPY", "kwota": "100000"}]},
+    async with Client(params, mode="legacy") as c:
+        rate = await c.call_tool("get_nbp_rate", {"currency": "EUR", "date": "2026-06-12"})
+        assert rate.structured_content is not None
+        assert rate.structured_content["rate"] == "4.2484"
+        assert rate.structured_content["table_number"] == "112/A/NBP/2026"
+        today = await c.call_tool("get_nbp_rate", {"currency": "USD"})
+        assert today.is_error is False, today.content
+        assert today.structured_content is not None
+        assert date.fromisoformat(today.structured_content["quote_date"]) <= date.today()
+        portfolio = await c.call_tool(
+            "portfolio_value",
+            {"positions": [{"currency": "EUR", "amount": "1000"}, {"currency": "JPY", "amount": "100000"}]},
         )
-        assert portfel.is_error is False, portfel.content
-        print(kurs.structured_content, dzis.structured_content, portfel.structured_content, sep="\n")
+        assert portfolio.is_error is False, portfolio.content
+        print(rate.structured_content, today.structured_content, portfolio.structured_content, sep="\n")
