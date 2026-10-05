@@ -68,16 +68,37 @@ w `mypy.ini`.
 
 ## Ćwiczenie: kolumna „Udział %”
 
-Tabela ekspozycji w `app.py` pokazuje dla każdej waluty kwotę, kurs i wartość w PLN
-(`result.lines`). Twoje zadanie: dodać funkcję `udzialy(linie)`, która zwraca udział wartości
-PLN każdej waluty w portfelu, i kolumnę „Udział %” w tabeli. Cykl:
+Ten checkpoint jest jednym z możliwych punktów startu, wygodnym dla chętnych, a nie wymogiem.
+Materiały nie narzucają technologii ani architektury Kokpitu: możesz robić ćwiczenie we własnym
+kodzie i stosie (Streamlit, React, inny). Poniższe komendy `pytest` są przykładem dla tego
+checkpointu; w Twoim stosie użyj odpowiednika testu jednostkowego.
 
-1. Issue z formularza `praca.yml`; kryteria akceptacji to komendy `pytest`. Workflow
-   `issue-check` ma być zielony.
-2. TDD: najpierw czerwony test w `tests/test_udzialy.py`, potem kod.
+Tabela ekspozycji w `app.py` pokazuje dla każdej waluty kwotę, kurs i wartość w PLN
+(`result.lines`). Zadanie: dodać udział wartości PLN każdej waluty w portfelu jako kolumnę
+„Udział %”. Kryteria opisują zachowanie:
+
+1. Suma udziałów w tabeli wynosi 100,00 z dokładnością do ±0,01.
+2. Pusty portfel (albo portfel o wartości zero) nie powoduje błędu.
+3. Kolumna „Udział %” jest widoczna w tabeli ekspozycji na panelu.
+
+Przykładowe kryteria akceptacji dla tego checkpointu (funkcja `udzialy(linie)` i plik
+`tests/test_udzialy.py` powstają w ćwiczeniu):
+
+```bash
+pytest -q tests/test_udzialy.py  # exit 0
+pytest -q tests/test_udzialy.py -k suma_100  # exit 0
+pytest -q tests/test_udzialy.py -k pusty_portfel  # exit 0
+pytest -q  # exit 0
+```
+
+Cykl:
+
+1. Issue z formularza `praca.yml`; kryteria akceptacji to komendy z oczekiwanym wynikiem.
+   Workflow `issue-check` ma być zielony.
+2. TDD: najpierw czerwony test, potem kod.
 3. PR z `Closes #N` i wyjściem komend z kryteriów; job `pytest` zielony.
 4. Recenzja przez świeżą sesję agenta, werdykt jako komentarz na PR-ze.
 5. Scalenie i sprawdzenie `gh pr view N --json state,mergedAt`.
 
-Zwróć uwagę na typ `Decimal`, pusty portfel i to, czy zaokrąglone udziały sumują się
-do dokładnie 100,00.
+Zwróć uwagę na typ `Decimal` zamiast `float` i na zaokrąglenia: udziały zaokrąglane każdy
+osobno mogą dać sumę 99,99 albo 100,01.
