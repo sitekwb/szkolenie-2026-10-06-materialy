@@ -6,4 +6,6 @@
 | Nieufny skill do oceny | [`assets/zlosliwy-skill/`](assets/zlosliwy-skill/) | **celowo złośliwy** artefakt szkoleniowy. Czytaj go i oceniaj, nie instaluj i nie uruchamiaj |
 | Serwer MCP z kursami NBP | [`serwer-mcp-nbp/`](serwer-mcp-nbp/) | serwer `stdio` tylko do odczytu dla etapu 4; instalacja i `claude mcp add` w jego README |
 
+Slajdy warsztatu w wersji do pobrania (HTML działający offline i PDF, z sumami SHA-256) są w katalogu [`warsztat/`](warsztat/).
+
 Licencja: MIT, zob. [`LICENSE`](LICENSE).
