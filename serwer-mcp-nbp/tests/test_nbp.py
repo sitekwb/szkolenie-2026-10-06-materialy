@@ -53,13 +53,15 @@ def test_brak_daty_to_dzisiaj() -> None:
 
 
 @pytest.mark.parametrize(
-    ("wejscie", "oczekiwane"), [("1250.50", "1250.50"), ("-10", "-10"), ("0.0001", "0.0001")]
+    ("wejscie", "oczekiwane"), [("1250.50", "1250.50"), ("10", "10"), ("0.0001", "0.0001")]
 )
 def test_kwota(wejscie: str, oczekiwane: str) -> None:
     assert nbp.waliduj_kwote(wejscie) == Decimal(oczekiwane)
 
 
-@pytest.mark.parametrize("wejscie", ["1,5", "1e9", "NaN", "Infinity", "0.00001", "1" * 16, ""])
+@pytest.mark.parametrize(
+    "wejscie", ["1,5", "1e9", "NaN", "Infinity", "0.00001", "1" * 16, "", "0", "0.00", "-10"]
+)
 def test_nieprawidlowa_kwota(wejscie: str) -> None:
     with pytest.raises(BladKursu) as e:
         nbp.waliduj_kwote(wejscie)

@@ -94,7 +94,9 @@ class Pozycja(BaseModel):
 
     model_config = ConfigDict(extra="forbid", frozen=True)
     waluta: Annotated[str, Field(min_length=3, max_length=3, description="Kod ISO 4217, np. EUR.")]
-    kwota: Annotated[str, Field(max_length=24, description="Kwota dziesiętna jako tekst, np. '1000.00'.")]
+    kwota: Annotated[
+        str, Field(max_length=24, description="Dodatnia kwota dziesiętna jako tekst, np. '1000.00'.")
+    ]
 
 
 class WycenaPozycji(BaseModel):
@@ -154,10 +156,15 @@ def zbuduj_serwer(klient: KlientNBP) -> MCPServer:
 
     @serwer.tool(name="wartosc_portfela", description=opisy.WARTOSC_PORTFELA, annotations=_ODCZYT)
     async def wartosc_portfela(
-        pozycje: Annotated[list[Pozycja], Field(min_length=1, max_length=MAKS_POZYCJI_PORTFELA)],
+        pozycje: Annotated[list[Pozycja], Field(min_length=1)],
         data: str | None = None,
     ) -> WartoscPortfela:
         try:
+            if len(pozycje) > MAKS_POZYCJI_PORTFELA:
+                raise BladKursu(
+                    KodBledu.ZA_DUZO_POZYCJI,
+                    f"Portfel ma {len(pozycje)} pozycji; limit to {MAKS_POZYCJI_PORTFELA}.",
+                )
             dzien = waliduj_date(data)
             wyceny: list[WycenaPozycji] = []
             suma = Decimal("0.00")

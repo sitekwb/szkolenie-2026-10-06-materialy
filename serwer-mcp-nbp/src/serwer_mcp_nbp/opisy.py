@@ -1,7 +1,8 @@
 """Opisy narzędzi MCP jako wersjonowany artefakt (REQ-29).
 
 Agent czyta te opisy jak polecenie, więc każda zmiana treści jest zmianą zachowania systemu.
-Zmiana dowolnego opisu wymaga podbicia ``WERSJA_OPISOW`` i dopisania skrótu SHA-256 do
+Zmiana dowolnego opisu (także opisu pola, limitu lub typu parametru w ``serwer.py``) wymaga
+podbicia ``WERSJA_OPISOW`` i dopisania skrótu SHA-256 manifestu ``tools/list`` do
 ``tests/test_opisy.py`` — inaczej test przeglądowy pada.
 """
 
@@ -11,7 +12,7 @@ import hashlib
 import json
 from typing import Final
 
-WERSJA_OPISOW: Final = "1.0.0"
+WERSJA_OPISOW: Final = "1.1.0"
 
 INSTRUKCJE_SERWERA: Final = (
     "Serwer udostępnia wyłącznie odczyt kursów średnich NBP (tabela A, api.nbp.pl). "
@@ -31,7 +32,7 @@ KURS_NBP: Final = (
 PRZELICZ_NA_PLN: Final = (
     "Przelicza kwotę w walucie obcej na PLN po kursie średnim NBP (tabela A) z danego dnia, "
     "z forward-fillem dla dni bez notowania. Zaokrąglenie ROUND_HALF_UP do grosza. "
-    "Parametry: kwota - liczba dziesiętna jako tekst, np. '1250.50'; waluta - kod ISO 4217 "
+    "Parametry: kwota - dodatnia liczba dziesiętna jako tekst, np. '1250.50'; waluta - kod ISO 4217 "
     "z tabeli A albo PLN; data - RRRR-MM-DD, nie z przyszłości; pominięta oznacza dzisiaj."
 )
 
@@ -39,7 +40,7 @@ WARTOSC_PORTFELA: Final = (
     "Wycenia w PLN portfel podany w argumencie (lista pozycji: waluta i kwota) po kursach "
     "średnich NBP (tabela A) z danego dnia, z forward-fillem. Zwraca wycenę każdej pozycji "
     "i sumę. Serwer nie przechowuje żadnego portfela. Gdy dla którejkolwiek waluty brak kursu, "
-    "całe narzędzie zwraca błąd zamiast sumy częściowej. Najwyżej 50 pozycji."
+    "całe narzędzie zwraca błąd zamiast sumy częściowej. Kwoty dodatnie, najwyżej 50 pozycji."
 )
 
 OPISY: Final[dict[str, str]] = {

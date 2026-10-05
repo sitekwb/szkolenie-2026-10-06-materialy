@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 from collections.abc import AsyncIterator
+from decimal import Decimal
 from typing import Any
 
 import pytest
@@ -142,8 +143,8 @@ async def test_wartosc_portfela_bez_sumy_czesciowej(klient_mcp: Client) -> None:
 
 @pytest.mark.parametrize(
     "pozycje",
-    [[], [{"waluta": "EUR", "kwota": "1"}] * 51, [{"waluta": "EUR", "kwota": "1", "ukryte": "x"}]],
-    ids=["pusty", "za-dlugi", "dodatkowe-pole"],
+    [[], [{"waluta": "EUR", "kwota": "1", "ukryte": "x"}]],
+    ids=["pusty", "dodatkowe-pole"],
 )
 async def test_wartosc_portfela_walidacja_schematu(klient_mcp: Client, pozycje: list[dict[str, str]]) -> None:
     wynik = await klient_mcp.call_tool("wartosc_portfela", {"pozycje": pozycje})
@@ -168,3 +169,33 @@ def test_odmowa_startu_z_kluczem_modelu(zmienna: str, capsys: pytest.CaptureFixt
 
 def test_pusty_klucz_nie_blokuje() -> None:
     sprawdz_srodowisko({"ANTHROPIC_API_KEY": "", "PATH": "/usr/bin"})
+
+
+async def test_wartosc_portfela_za_duzo_pozycji(klient_mcp: Client, atrapa: AtrapaNBP) -> None:
+    wynik = await klient_mcp.call_tool(
+        "wartosc_portfela", {"pozycje": [{"waluta": "EUR", "kwota": "1"}] * 51}
+    )
+    dane = blad(wynik)
+    assert dane["blad"] == "za_duzo_pozycji"
+    assert "50" in dane["powod"]
+    assert atrapa.zadania == []
+
+
+@pytest.mark.parametrize("kwota", ["0", "-100"])
+async def test_przelicz_kwota_niedodatnia(klient_mcp: Client, kwota: str) -> None:
+    wynik = await klient_mcp.call_tool(
+        "przelicz_na_pln", {"kwota": kwota, "waluta": "EUR", "data": "2026-06-12"}
+    )
+    assert blad(wynik)["blad"] == "nieprawidlowa_kwota"
+
+
+async def test_przelicz_jpy_kurs_za_jednostke(klient_mcp: Client) -> None:
+    wynik = await klient_mcp.call_tool(
+        "przelicz_na_pln", {"kwota": "100000", "waluta": "JPY", "data": "2026-06-12"}
+    )
+    dane = wynik.structured_content
+    assert dane is not None
+    kurs = Decimal(dane["kurs"]["kurs"])
+    assert kurs < 1, "NBP podaje kurs JPY za 1 jednostkę, nie za 100"
+    assert dane["kwota_pln"] == str(nbp.na_grosze(100000 * kurs))
+    assert (dane["kurs"]["kurs"], dane["kwota_pln"]) == ("0.022923", "2292.30")

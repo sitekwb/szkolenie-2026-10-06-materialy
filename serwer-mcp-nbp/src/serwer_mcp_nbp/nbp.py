@@ -85,7 +85,7 @@ WALUTY_TABELI_A: Final = frozenset(
 WALUTY_OBSLUGIWANE: Final = WALUTY_TABELI_A | {"PLN"}
 
 _WZORZEC_DATY: Final = re.compile(r"\d{4}-\d{2}-\d{2}")
-_WZORZEC_KWOTY: Final = re.compile(r"-?\d{1,15}(\.\d{1,4})?")
+_WZORZEC_KWOTY: Final = re.compile(r"\d{1,15}(\.\d{1,4})?")
 
 
 class KodBledu(StrEnum):
@@ -95,6 +95,7 @@ class KodBledu(StrEnum):
     NIEPRAWIDLOWA_DATA = "nieprawidlowa_data"
     NIEPRAWIDLOWA_KWOTA = "nieprawidlowa_kwota"
     NIEPRAWIDLOWY_PORTFEL = "nieprawidlowy_portfel"
+    ZA_DUZO_POZYCJI = "za_duzo_pozycji"
     BRAK_NOTOWANIA = "brak_notowania"
     NBP_NIEDOSTEPNE = "nbp_niedostepne"
     NIEPRAWIDLOWA_ODPOWIEDZ_NBP = "nieprawidlowa_odpowiedz_nbp"
@@ -154,16 +155,20 @@ def waliduj_date(data: str | None) -> date:
 
 
 def waliduj_kwote(kwota: str) -> Decimal:
-    """Parsuje kwotę dziesiętną z tekstu (najwyżej 15 cyfr całkowitych i 4 po kropce)."""
+    """Parsuje dodatnią kwotę dziesiętną z tekstu (najwyżej 15 cyfr całkowitych i 4 po kropce)."""
     tekst = kwota.strip()
     if not _WZORZEC_KWOTY.fullmatch(tekst):
         raise BladKursu(
-            KodBledu.NIEPRAWIDLOWA_KWOTA, "Kwota musi być liczbą dziesiętną z kropką, np. '1250.50'."
+            KodBledu.NIEPRAWIDLOWA_KWOTA,
+            "Kwota musi być dodatnią liczbą dziesiętną z kropką, np. '1250.50'.",
         )
     try:
-        return Decimal(tekst)
+        wartosc = Decimal(tekst)
     except InvalidOperation:  # pragma: no cover - wykluczone przez wzorzec
         raise BladKursu(KodBledu.NIEPRAWIDLOWA_KWOTA, "Kwota nie jest liczbą.") from None
+    if wartosc <= 0:
+        raise BladKursu(KodBledu.NIEPRAWIDLOWA_KWOTA, "Kwota musi być większa od zera.")
+    return wartosc
 
 
 def na_grosze(wartosc: Decimal) -> Decimal:
