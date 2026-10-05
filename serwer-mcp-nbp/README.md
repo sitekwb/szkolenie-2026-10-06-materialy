@@ -31,7 +31,11 @@ python3 -m venv .venv
 # Krok 3. Sprawdzenie bez klienta MCP: jedno zapytanie do api.nbp.pl, JSON na stdout
 .venv/bin/serwer-mcp-nbp --sprawdz EUR
 
-# Krok 4. Rejestracja w Claude Code (zakres użytkownika: serwer widoczny we wszystkich projektach)
+# Krok 4. Claude Code (pomiń, jeśli już jest): instalator natywny trafia do ~/.local/bin
+curl -fsSL https://claude.ai/install.sh | bash
+echo 'export PATH="$HOME/.local/bin:$PATH"' >> ~/.bashrc && export PATH="$HOME/.local/bin:$PATH"
+
+# Krok 5. Rejestracja w Claude Code (zakres użytkownika: serwer widoczny we wszystkich projektach)
 claude mcp add --transport stdio --scope user nbp -- ~/szkolenie-2026-10-06-materialy/serwer-mcp-nbp/.venv/bin/serwer-mcp-nbp
 claude mcp list
 ```
@@ -89,7 +93,7 @@ repozytorium). Gwiazdka (*) oznacza odstępstwo opisane w następnej sekcji.
 
 | ID | Wymaganie (skrót) | Jak spełnione | Test |
 |---|---|---|---|
-| FR-27 | Serwer MCP lokalny, `stdio`, instalowany jedną komendą `claude mcp add` | `MCPServer.run("stdio")`; komenda w „Instalacja”, krok 4 | `test_e2e_stdio.py::test_stdio_initialize_list_call`; test w Dockerze (opis PR) |
+| FR-27 | Serwer MCP lokalny, `stdio`, instalowany jedną komendą `claude mcp add` | `MCPServer.run("stdio")`; komenda w „Instalacja”, krok 5 | `test_e2e_stdio.py::test_stdio_initialize_list_call`; test w Dockerze (opis PR) |
 | FR-28* | Narzędzia `kurs_nbp(waluta, data)`, `przelicz_na_pln(kwota, waluta, data)`, `wartosc_portfela(data, …)`, wyłącznie odczytowe | Trzy narzędzia z `read_only_hint=True`. `wartosc_portfela` dostaje portfel w argumencie `pozycje` | `test_serwer.py::test_lista_narzedzi_dokladnie_odczytowa`, `test_wartosc_portfela_*` |
 | FR-03 | Forward-fill bez interpolacji, z faktyczną datą notowania | `KlientNBP.kurs`: ostatnie notowanie ≤ dzień żądany w oknie 14 dni; pola `data_notowania` i `forward_fill` | `test_nbp.py::test_forward_fill_bez_interpolacji` (Boże Ciało, sobota, niedziela) |
 | FR-01 | `Decimal`, ROUND_HALF_UP do grosza, PLN = 1 | `json.loads(parse_float=Decimal)`, `na_grosze`, stała dla PLN | `test_round_half_up`, `test_przelicz_na_pln`, `test_pln_bez_zapytania` |
