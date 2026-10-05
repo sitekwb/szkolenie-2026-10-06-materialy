@@ -1,0 +1,9 @@
+# Materiały do warsztatu (6 października 2026)
+
+| Element | Gdzie | Do czego |
+|---|---|---|
+| Wymagania aplikacji „Kokpit rewaluacji portfela walutowego” | [`wymagania-aplikacji.pdf`](wymagania-aplikacji.pdf) | definicja arc42: wymagania, przypadki użycia, decyzje, testy |
+| Nieufny skill do oceny | [`assets/zlosliwy-skill/`](assets/zlosliwy-skill/) | **celowo złośliwy** artefakt szkoleniowy. Czytaj go i oceniaj, nie instaluj i nie uruchamiaj |
+| Serwer MCP z kursami NBP | [`serwer-mcp-nbp/`](serwer-mcp-nbp/) | serwer `stdio` tylko do odczytu dla etapu 4; instalacja i `claude mcp add` w jego README |
+
+Licencja: MIT, zob. [`LICENSE`](LICENSE).
