@@ -53,7 +53,12 @@ Kilka uwag:
 - Serwer **odmawia startu** (kod 3, komunikat na stderr), gdy w jego środowisku jest niepusty klucz usługi
   modelu: `ANTHROPIC_API_KEY`, `ANTHROPIC_AUTH_TOKEN`, `CLAUDE_CODE_OAUTH_TOKEN` albo `OPENAI_API_KEY` (ADR-06).
   Jeśli trzymasz taki klucz w powłoce, a proces serwera go dziedziczy, nadpisz go pustą wartością przy
-  rejestracji, np. `claude mcp add --transport stdio --scope user -e ANTHROPIC_API_KEY= nbp -- …`.
+  rejestracji. Nazwa serwera musi stać **przed** `-e` (opcja `-e` przyjmuje wiele wartości i inaczej zjada
+  nazwę), a `--` kończy opcje:
+  `claude mcp add nbp --transport stdio --scope user -e ANTHROPIC_API_KEY= -- ~/szkolenie-2026-10-06-materialy/serwer-mcp-nbp/.venv/bin/serwer-mcp-nbp`.
+  Claude Code przekazuje procesowi MCP `ANTHROPIC_API_KEY` z powłoki, więc bez tego serwer nie wystartuje.
+  Przy logowaniu przez `/login` albo przez `CLAUDE_CODE_OAUTH_TOKEN` obejście nie jest potrzebne, bo Claude
+  Code nie przekazuje tego tokenu serwerom MCP (sprawdzone w Dockerze z Claude Code 2.1.289).
 - Usunięcie serwera: `claude mcp remove --scope user nbp`.
 
 ## Przykładowe pytania w Claude Code

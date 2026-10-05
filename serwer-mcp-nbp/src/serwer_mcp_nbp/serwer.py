@@ -201,7 +201,8 @@ def sprawdz_srodowisko(env: Mapping[str, str]) -> None:
         print(
             "serwer-mcp-nbp: odmowa startu - w środowisku jest klucz usługi modelu: "
             f"{', '.join(znalezione)}. Serwer MCP nie może mieć tego klucza (ADR-06). "
-            "Usuń zmienną albo nadpisz ją pustą wartością: claude mcp add ... -e NAZWA= ...",
+            "Usuń zmienną albo nadpisz ją pustą wartością (nazwa serwera przed -e): "
+            "claude mcp add nbp --transport stdio --scope user -e NAZWA= -- <ścieżka>",
             file=sys.stderr,
         )
         raise SystemExit(3)
