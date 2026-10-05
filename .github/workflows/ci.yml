@@ -89,3 +89,28 @@ jobs:
         run: .venv/bin/mypy --strict .
       - name: Tests (offline; live test skipped)
         run: .venv/bin/pytest -q
+
+  hitl-gate:
+    name: hitl-gate (ruff, mypy, pytest)
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    defaults:
+      run:
+        working-directory: hitl-gate
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: "3.12"
+      - name: Install
+        run: |
+          python -m venv .venv
+          .venv/bin/pip install -r requirements-dev.txt
+      - name: Lint (ruff)
+        run: .venv/bin/ruff check . && .venv/bin/ruff format --check .
+      - name: Types (mypy --strict)
+        run: .venv/bin/mypy
+      - name: Tests (hook fed JSON on stdin)
+        run: .venv/bin/pytest -q
