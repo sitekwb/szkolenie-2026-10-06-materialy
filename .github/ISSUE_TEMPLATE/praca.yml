@@ -1,0 +1,70 @@
+name: Praca (zadanie w repo)
+description: Jedno spójne zadanie z kryteriami akceptacji sprawdzalnymi komendą.
+title: "<krótki tytuł zadania>"
+# Etykieta stanu nadawana przy zakładaniu. Musi istnieć w repo (gh label create "state:nowe"),
+# inaczej GitHub jej nie nada i bramka zgłosi brak etykiety stanu.
+labels: ["state:nowe"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Każde issue przechodzi check `issue-check` (`scripts/issue_check.py`), zanim ruszy praca.
+        Check wymaga wszystkich sześciu sekcji i dokładnie jednej etykiety stanu (`state:…`).
+        Najważniejsza jest ostatnia sekcja: kryteria akceptacji to komendy w bloku ```bash,
+        każda z oczekiwanym wynikiem po `  # `.
+
+  - type: textarea
+    id: cel
+    attributes:
+      label: Cel
+      description: Stan końcowy po zamknięciu issue — co ma być prawdą, nie co zrobić.
+      placeholder: Repo ma ..., dzięki czemu ...
+    validations:
+      required: true
+
+  - type: textarea
+    id: kontekst
+    attributes:
+      label: Kontekst
+      description: Dlaczego teraz; co jest dziś w repo; decyzje i dokumenty, z których to wynika.
+    validations:
+      required: true
+
+  - type: textarea
+    id: zakres
+    attributes:
+      label: Zakres
+      description: Lista plików i zmian objętych tym issue.
+    validations:
+      required: true
+
+  - type: textarea
+    id: poza-zakresem
+    attributes:
+      label: Poza zakresem
+      description: Co świadomie NIE wchodzi (i w którym osobnym issue to zapisano).
+    validations:
+      required: true
+
+  - type: textarea
+    id: powiazane
+    attributes:
+      label: Powiązane
+      description: Dokumenty, wymagania, inne issues i PR-y; zależności kolejnościowe.
+    validations:
+      required: true
+
+  - type: textarea
+    id: kryteria-akceptacji
+    attributes:
+      label: Kryteria akceptacji
+      description: >-
+        NAJWAŻNIEJSZA CZĘŚĆ ISSUE. Blok ```bash z komendami; każda niepusta linia to jedna
+        komenda i jej oczekiwany wynik po `  # `, np. `python3 -m pytest tests -q  # exit 0`.
+        Opis słowny jest odrzucany: kryterium ma umieć paść. Zamień oba placeholdery.
+      value: |
+        ```bash
+        <komenda>  # <oczekiwany wynik>
+        ```
+    validations:
+      required: true

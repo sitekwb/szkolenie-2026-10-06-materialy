@@ -1,0 +1,35 @@
+name: issue-check
+
+# Bramka procesu: issue wg szablonu musi przejść check, ZANIM ruszy praca.
+#
+# Bezpieczeństwo: treść i tytuł issue to dane NIEZAUFANE. Żadne pole zdarzenia
+# nie jest wstawiane wyrażeniem do `run:`. Skrypt czyta je z pliku JSON
+# zdarzenia ($GITHUB_EVENT_PATH, ustawianego przez runner), więc `$(…)` czy
+# backticki w treści zostają tekstem. Workflow tylko czyta: bez sekretów,
+# bez tokenu z prawem zapisu, bez komentowania issue.
+
+on:
+  issues:
+    types: [opened, edited, labeled, unlabeled, milestoned, demilestoned, reopened]
+
+permissions:
+  issues: read
+  contents: read
+
+jobs:
+  issue-check:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: "3.12"
+
+      # Konfiguracja (prefiks etykiety stanu, milestone, etykiety typu) jest
+      # w .github/issue-check.json, jeśli plik istnieje; zob. README.md.
+      - name: Walidacja issue
+        run: python3 scripts/issue_check.py --event "$GITHUB_EVENT_PATH"

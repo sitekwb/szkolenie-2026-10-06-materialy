@@ -1,0 +1,18 @@
+{
+  "action": "opened",
+  "issue": {
+    "number": 1,
+    "title": "Funkcja suma $(touch WSTRZYKNIETE_TYTUL)",
+    "body": "\n## Cel\nFunkcja `suma` zwraca sumę dwóch liczb całkowitych, a test to potwierdza.\n\n## Kontekst\nModuł `app/kalkulator.py` nie ma jeszcze żadnej funkcji.\n\n## Zakres\n- `app/kalkulator.py`\n- `tests/test_kalkulator.py`\n\n## Poza zakresem\nInterfejs użytkownika.\n\n## Powiązane\nBrak.\n\n## Kryteria akceptacji\n```bash\npython3 -m pytest tests/test_kalkulator.py -q  # exit 0\npython3 -c 'from app.kalkulator import suma; print(suma(2, 3))'  # 5\n```",
+    "labels": [
+      {
+        "name": "enhancement"
+      },
+      {
+        "name": "state:nowe"
+      }
+    ],
+    "milestone": null,
+    "state": "open"
+  }
+}
