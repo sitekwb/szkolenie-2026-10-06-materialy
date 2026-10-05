@@ -7,8 +7,8 @@ Działa lokalnie w transporcie `stdio`, wyłącznie do odczytu. Napisany w Pytho
 | Narzędzie | Parametry | Zwraca |
 |---|---|---|
 | `kurs_nbp` | `waluta` (ISO 4217 z tabeli A albo PLN), `data` (RRRR-MM-DD, opcjonalna; domyślnie dzisiaj) | kurs, kod waluty, data żądana, **faktyczna data notowania**, numer tabeli, źródło, `forward_fill`, `dane_aktualne` |
-| `przelicz_na_pln` | `kwota` (tekst dziesiętny, np. `"1250.50"`), `waluta`, `data` | kwota w PLN (`Decimal`, ROUND_HALF_UP do grosza) i kurs jak wyżej |
-| `wartosc_portfela` | `pozycje` (lista `{waluta, kwota}`, od 1 do 50), `data` | wycena każdej pozycji i suma w PLN |
+| `przelicz_na_pln` | `kwota` (dodatnia, tekst dziesiętny, np. `"1250.50"`), `waluta`, `data` | kwota w PLN (`Decimal`, ROUND_HALF_UP do grosza) i kurs jak wyżej. Kurs NBP jest zawsze za 1 jednostkę waluty (także JPY i HUF) |
+| `wartosc_portfela` | `pozycje` (lista `{waluta, kwota}`, kwoty dodatnie, od 1 do 50 pozycji; więcej daje błąd `za_duzo_pozycji`), `data` | wycena każdej pozycji i suma w PLN |
 
 Kwoty i kursy zwracamy jako tekst dziesiętny, żeby nie tracić precyzji przez `float`.
 Opisy narzędzi, które czyta agent, są w [`src/serwer_mcp_nbp/opisy.py`](src/serwer_mcp_nbp/opisy.py).
@@ -87,7 +87,7 @@ python3 -m venv .venv && .venv/bin/pip install -e '.[dev]'
 - `tests/test_e2e_stdio.py`: serwer jako podproces stdio i klient SDK (initialize → list_tools → call_tool)
   na atrapie NBP. Do tego test odmowy startu z kluczem modelu.
 - `tests/test_live.py`: to samo na prawdziwym NBP. Domyślnie pominięty, uruchamiany przez `-m live`.
-- `tests/test_opisy.py`: przegląd opisów narzędzi (REQ-29).
+- `tests/test_opisy.py`: przegląd manifestu narzędzi (REQ-29). Test przypina SHA-256 wyniku `tools/list` (nazwy, opisy, `inputSchema`, `outputSchema`, adnotacje) i instrukcji serwera dla bieżącej `WERSJA_OPISOW`.
 
 CI (`.github/workflows/ci.yml`) uruchamia lint, typy i testy bez `live` na Pythonie 3.12 i 3.13.
 
@@ -101,7 +101,7 @@ repozytorium). Gwiazdka (*) oznacza odstępstwo opisane w następnej sekcji.
 | FR-27 | Serwer MCP lokalny, `stdio`, instalowany jedną komendą `claude mcp add` | `MCPServer.run("stdio")`; komenda w „Instalacja”, krok 5 | `test_e2e_stdio.py::test_stdio_initialize_list_call`; test w Dockerze (opis PR) |
 | FR-28* | Narzędzia `kurs_nbp(waluta, data)`, `przelicz_na_pln(kwota, waluta, data)`, `wartosc_portfela(data, …)`, wyłącznie odczytowe | Trzy narzędzia z `read_only_hint=True`. `wartosc_portfela` dostaje portfel w argumencie `pozycje` | `test_serwer.py::test_lista_narzedzi_dokladnie_odczytowa`, `test_wartosc_portfela_*` |
 | FR-03 | Forward-fill bez interpolacji, z faktyczną datą notowania | `KlientNBP.kurs`: ostatnie notowanie ≤ dzień żądany w oknie 14 dni; pola `data_notowania` i `forward_fill` | `test_nbp.py::test_forward_fill_bez_interpolacji` (Boże Ciało, sobota, niedziela) |
-| FR-01 | `Decimal`, ROUND_HALF_UP do grosza, PLN = 1 | `json.loads(parse_float=Decimal)`, `na_grosze`, stała dla PLN | `test_round_half_up`, `test_przelicz_na_pln`, `test_pln_bez_zapytania` |
+| FR-01 | `Decimal`, ROUND_HALF_UP do grosza, PLN = 1 | `json.loads(parse_float=Decimal)`, `na_grosze`, stała dla PLN; kwota musi być dodatnia | `test_round_half_up`, `test_przelicz_na_pln`, `test_przelicz_jpy_kurs_za_jednostke`, `test_przelicz_kwota_niedodatnia`, `test_pln_bez_zapytania` |
 | FR-31, NFR-08 | Brak danych to ustrukturyzowany błąd, nigdy wartość domyślna | `BladKursu` → `ToolError` → `isError: true`, treść `{"blad", "powod"}` bez pól liczbowych; portfel bez sumy częściowej | `test_brak_kursu_to_blad_nie_liczba`, `test_wartosc_portfela_bez_sumy_czesciowej`, `test_bledy_nbp_bez_wartosci_domyslnej` |
 | FR-26, OG-15, ADR-04, NFR-05, KA-05.4 | Zero narzędzi zmieniających stan | Brak takich narzędzi; klient HTTP przepuszcza tylko `GET` | `test_lista_narzedzi_dokladnie_odczytowa` (równość zbiorów), `test_nieznane_narzedzie_zapisujace`, `test_allowlista_tylko_get_https_api_nbp` |
 | FR-30* | Tylko `GET`, bez dostępu do plików projektu i do klucza modelu | Hak `_sprawdz_zadanie`: `GET`, HTTPS, host `api.nbp.pl`; serwer nie czyta ani nie zapisuje plików | `test_allowlista_tylko_get_https_api_nbp`, `test_przekierowania_wylaczone` |
@@ -117,7 +117,7 @@ repozytorium). Gwiazdka (*) oznacza odstępstwo opisane w następnej sekcji.
 | KA-08.2 | `kurs_nbp("EUR", "2026-06-12")`: kurs, kod, data żądana, data notowania, źródło; zgodność ze schematem | Model `Kurs` jako `outputSchema` | `test_kurs_nbp_ksztalt_wyniku`, `test_live.py` |
 | KA-08.4 | Brak kursu i pusty cache: błąd bez pól liczbowych | jak FR-31 | `test_serwer.py::blad()` sprawdza, że wszystkie pola są tekstem |
 | KA-08.5* | `POST`/`PUT`/`DELETE` odrzucone | Brak backendu. Klient blokuje każdą metodę inną niż `GET` przed wysłaniem | `test_allowlista_tylko_get_https_api_nbp[POST, DELETE]` |
-| REQ-29 | Opisy narzędzi wersjonowane i przeglądane jak kod | Opisy w `opisy.py` z `WERSJA_OPISOW`; test przypina SHA-256 dla wersji | `test_opisy.py` (zmiana opisu bez podbicia wersji i nowego skrótu = czerwony test) |
+| REQ-29 | Opisy narzędzi **i schematy parametrów** wersjonowane i przeglądane jak kod | Opisy w `opisy.py` z `WERSJA_OPISOW` (obecnie 1.1.0); test przypina SHA-256 całego manifestu `tools/list` (opisy, `inputSchema`, `outputSchema`, adnotacje) i instrukcji serwera | `test_opisy.py`: zmiana opisu pola, limitu albo typu w `serwer.py` bez podbicia wersji i nowego skrótu daje czerwony test |
 | REQ-48 | Rozszerzenie przechodzi przegląd całej treści przed instalacją | Kod i opisy są jawne w tym repozytorium; model zagrożeń poniżej | przegląd PR |
 | ADR-02* | MCP jako mechanizm integracji kursów NBP z agentem | Jest serwer MCP. Odstępstwo: nie jest adapterem backendu | — |
 | OG-14* | Proces odrębny, `stdio`, na maszynie uczestnika | Spełnione poza „komunikuje się z backendem przez `X-API-Key`” | `test_e2e_stdio.py` |
@@ -139,6 +139,8 @@ Definicja zostanie dostosowana w osobnym issue w repozytorium warsztatu.
 | KA-08.5 | Backend odrzuca `POST`/`PUT`/`DELETE` kodem `403` | Nie ma backendu, więc nie ma `403`. Serwer nie wystawia zapisu, a klient HTTP odrzuca każdą metodę poza `GET`, zanim żądanie wyjdzie (`test_allowlista_tylko_get_https_api_nbp`) |
 | UC-08 | Warunek wstępny: działa backend, w zmiennej jest klucz odczytowy | Warunek wstępny: dostęp do `api.nbp.pl`. Przypadek 4a (zły klucz) nie występuje |
 | 02, 06, 08 (kontekst, widok blokowy, sekrety) | Strzałka MCP → kokpit; jedyny sekret serwera to klucz odczytowy MCP | Strzałka MCP → `api.nbp.pl`; serwer **nie ma żadnego sekretu** |
+| OG-12 | Fallback offline z danych zaszczepionych, aby aplikacja działała bez sieci | **Brak fallbacku z danych zaszczepionych.** Bez sieci serwer zwraca tylko wpisy, które ma już w cache w pamięci (z `dane_aktualne: false`). Po restarcie procesu cache jest pusty i każde pytanie kończy się błędem `nbp_niedostepne`. Ta wersja nie ma danych wbudowanych w paczkę |
+| OG-22 | Treść niezaufana trafiająca do agenta jest opakowana w jednoznaczny ogranicznik | **Brak ogranicznika.** Zamiast niego serwer nie przekazuje agentowi żadnego wolnego tekstu z NBP. Wynik składa się wyłącznie z pól, które przeszły walidację kształtu: kod `[A-Z]{3}`, liczba dziesiętna, data, numer tabeli według wzorca `NNN/A/NBP/RRRR`. Nazwę waluty i treść błędów HTTP z NBP serwer odrzuca. Komunikaty błędów pochodzą z serwera, nie z NBP |
 
 ## Model zagrożeń
 
