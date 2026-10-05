@@ -16,17 +16,34 @@ Permission rules and hooks are enforced by Claude Code itself, not by the model.
   which rule is more specific. Deny applies in every permission mode, including `bypassPermissions`.
 - A Bash rule matches the command text. `Bash(rm *)` matches `rm -rf build/` but not
   `/bin/rm -rf build/` or `bash -c 'rm -rf build/'`. A deny rule is not a sandbox.
-- The hook parses the command instead. It splits `;`, `&&`, `|`, strips paths, quotes, backslashes
-  and leading `VAR=value`, unwraps `bash -c`, `env`, `sudo`, `xargs`, `eval`, `$(...)` and
-  backticks, and blocks `rm`, `rmdir`, `unlink`, `shred` and `find -delete`. A command name that
-  is only known at run time (`$CMD -rf build`) is blocked, and so is input it cannot parse.
+- The hook parses the command instead. It splits `;`, `&&`, `||`, `|`, new lines and `( )`, and
+  treats shell keywords (`if`, `then`, `else`, `do`, `while`, `{`, `!`, function bodies) as the
+  start of a new command. It strips paths, quotes, backslashes, redirections and leading
+  `VAR=value`, and unwraps `sudo`, `env`, `nice`, `timeout`, `xargs`, `stdbuf`, `ionice`, `nohup`,
+  `busybox` and similar wrappers, including option values such as `sudo -u root`. It re-checks
+  the code a shell runs: `bash -c`, `eval`, `$(...)`, backticks, heredocs (`bash <<EOF`),
+  here-strings, `echo ... | sh` and aliases. It blocks `rm`, `rmdir`, `unlink`, `shred`,
+  `find -delete` and `git clean`.
+- It fails closed: a command name known only at run time (`$CMD -rf build`), a shell that runs a
+  script file (`bash s.sh`) or reads unknown piped input (`cat s.sh | bash`), and input it cannot
+  parse are all blocked. Lookups such as `command -v rm`, `type rm`, `which rm` or `man rm` pass.
 - Hooks run in every permission mode, including `bypassPermissions`. Exit code 0 means
   "no decision": the normal permission flow and the rules above still apply.
-- The hook is also a text check, only a stricter one. Real isolation of files and network comes
-  from the sandbox, a container or a VM.
 
 Sources (checked 2026-10-05): <https://code.claude.com/docs/en/permissions>,
 <https://code.claude.com/docs/en/hooks>, <https://code.claude.com/docs/en/permission-modes>.
+
+## What this hook does not catch
+
+The hook checks command names, nothing else. It does not stop deleting or overwriting files by
+other means, for example `git rm`, `git reset --hard`, `git checkout -- .`,
+`python3 -c "import os; os.remove('x')"`, `node -e "require('fs').rmSync('x')"`,
+`perl -e "unlink q(x)"`, `> x`, `truncate -s0 x`, `dd if=/dev/null of=x`, `cp /dev/null x`,
+`mv x /dev/null`, `rsync --delete`, `tar --remove-files` or `sed -i`. After `rm` is refused, an
+agent may well try one of these. The real boundary comes from the sandbox, a container or a VM,
+and from what the account running the agent is allowed to touch, not from a hook. Treat the hook
+as a guard against the most common mistake, and the permission rules plus review of every diff
+as the human-in-the-loop step.
 
 ## Micro-exercise: same requests, different modes
 
@@ -69,7 +86,8 @@ versions; note what you see.
 3. Send C again. Then send: `Delete it with bash -c "rm notatka-hitl.txt"`, and
    `Delete it with /bin/rm notatka-hitl.txt`.
 
-Expected: `rm notatka-hitl.txt` is refused by the deny rule `Bash(rm *)` without a prompt. The
+Expected: `rm notatka-hitl.txt` is refused by the deny rule `Bash(rm *)` without a prompt
+(`git clean` is denied the same way by `Bash(git clean *)`). The
 `bash -c` and `/bin/rm` variants do not match that rule; the hook blocks them and the agent
 receives the reason, e.g.
 `Blocked by the hitl-gate PreToolUse hook: 'rm' deletes files (seen as '/bin/rm')`.

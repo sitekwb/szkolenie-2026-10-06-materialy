@@ -94,6 +94,77 @@ def test_allows_safe_commands(command: str) -> None:
     assert result.stderr == ""
 
 
+# Review of PR #17: each of these passed the first version of the hook with exit 0.
+@pytest.mark.parametrize(
+    "command",
+    [
+        "if [ -f x ]; then rm x; fi",
+        "if false; then :; elif true; then rm x; fi",
+        "if false; then :; else rm x; fi",
+        'for f in *.tmp; do rm "$f"; done',
+        "while true; do rm x; break; done",
+        "until false; do rm x; done",
+        "case a in a) rm x;; esac",
+        "{ rm x; }",
+        "f(){ rm x; }; f",
+        "function f { rm x; }",
+        "! rm x",
+        "(rm x)",
+        "true\nrm x",
+        "true || rm x",
+        "sudo -u root rm x",
+        "nice -n 5 rm x",
+        "timeout -s KILL 5 rm x",
+        "env -u HOME rm x",
+        "xargs -I {} rm {}",
+        "stdbuf -o L rm x",
+        "ionice -c 3 rm x",
+        "nohup rm x",
+        "time -p rm x",
+        "echo rm x | sh",
+        "printf 'rm x' | bash",
+        "cat script.sh | bash",
+        "bash <<EOF\nrm x\nEOF",
+        "bash <<'EOF'\nls\nrm x\nEOF",
+        "sh <<< 'rm x'",
+        "bash script.sh",
+        "busybox rm x",
+        "git clean -fd",
+        "git -C repo clean -xfd",
+        "alias r=rm; r x",
+    ],
+)
+def test_blocks_review_bypasses(command: str) -> None:
+    result = run_hook(bash_call(command))
+    assert result.returncode == 2, (command, result.stderr)
+    assert "Blocked by the hitl-gate PreToolUse hook" in result.stderr
+
+
+@pytest.mark.parametrize(
+    "command",
+    [
+        "command -v rm",
+        "command -V rm",
+        "type rm",
+        "which rm",
+        "man rm",
+        "echo rm",
+        "echo rm x",
+        "echo ls | sh",
+        "bash <<EOF\ngit status\nEOF",
+        "cat <<EOF > notes.txt\nrm x\nEOF",
+        "for f in *.py; do echo $f; done",
+        "if true; then echo ok; fi",
+        "timeout 5 git status",
+        "sudo -u root ls",
+        "git status && git diff",
+    ],
+)
+def test_allows_lookups_and_safe_control_flow(command: str) -> None:
+    result = run_hook(bash_call(command))
+    assert result.returncode == 0, (command, result.stderr)
+
+
 def test_reason_names_the_command() -> None:
     result = run_hook(bash_call("bash -c '/bin/rm -rf build'"))
     assert result.returncode == 2
@@ -127,5 +198,5 @@ def test_settings_wire_the_hook_and_rules() -> None:
     assert entry["hooks"][0]["type"] == "command"
     assert ".claude/hooks/block_rm.py" in entry["hooks"][0]["command"]
     rules = settings["permissions"]
-    assert "Bash(rm *)" in rules["deny"]
+    assert {"Bash(rm *)", "Bash(git clean *)"} <= set(rules["deny"])
     assert set(rules) >= {"deny", "ask", "allow"}

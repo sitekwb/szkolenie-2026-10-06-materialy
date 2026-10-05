@@ -3,6 +3,7 @@
   "permissions": {
     "deny": [
       "Bash(rm *)",
+      "Bash(git clean *)",
       "Bash(git push --force *)",
       "Read(./.env)",
       "Read(./.env.*)"

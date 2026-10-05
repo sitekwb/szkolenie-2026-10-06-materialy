@@ -13,6 +13,11 @@ extend-include = [".claude/hooks/*.py"]
 select = ["E", "F", "W", "I", "UP", "B", "SIM", "RUF", "ANN", "S", "PT", "PL", "C4", "D"]
 ignore = ["D203", "D213", "PLR2004"]
 
+[tool.ruff.lint.pylint]
+# The checkers dispatch on shell forms with one `case` per form.
+max-returns = 20
+max-branches = 20
+
 [tool.ruff.lint.per-file-ignores]
 "tests/**" = ["S101", "S603", "D", "PLR2004"]
 
