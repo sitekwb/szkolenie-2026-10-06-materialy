@@ -20,6 +20,7 @@ from dataclasses import dataclass
 from datetime import date, datetime, timedelta
 from decimal import ROUND_HALF_UP, Decimal
 from pathlib import Path
+from typing import Any
 from urllib.error import HTTPError
 from urllib.request import Request, urlopen
 from zoneinfo import ZoneInfo
@@ -80,7 +81,7 @@ def _days(start: date, end: date) -> Iterator[date]:
         yield start + timedelta(days=offset)
 
 
-def _fetch_tables(start: date, end: date, timeout: float) -> list[dict]:
+def _fetch_tables(start: date, end: date, timeout: float) -> list[dict[str, Any]]:
     """Pobiera tabele A opublikowane w przedziale (maks. ``MAX_RANGE_DAYS`` dni).
 
     Przedział bez publikacji (same święta/weekend) NBP zwraca jako HTTP 404 —
@@ -90,7 +91,8 @@ def _fetch_tables(start: date, end: date, timeout: float) -> list[dict]:
     request = Request(url, headers={"Accept": "application/json"})
     try:
         with urlopen(request, timeout=timeout) as response:
-            return json.load(response, parse_float=Decimal)
+            tables: list[dict[str, Any]] = json.load(response, parse_float=Decimal)
+            return tables
     except HTTPError as exc:
         if exc.code == 404:
             return []
