@@ -14,17 +14,18 @@ import os
 import sys
 from collections.abc import Mapping, Sequence
 from decimal import Decimal
-from typing import Annotated, Final
+from typing import Annotated, Any, Final, override
 
 import httpx
-from mcp.server.mcpserver import MCPServer
-from mcp.server.mcpserver.exceptions import ToolError
-from mcp_types import ToolAnnotations
-from pydantic import BaseModel, ConfigDict, Field
+from mcp.server.mcpserver import Context, MCPServer
+from mcp.server.mcpserver.exceptions import ToolError, UnexpectedToolError
+from mcp_types import CallToolResult, InputRequiredResult, ToolAnnotations
+from pydantic import BaseModel, ConfigDict, Field, ValidationError
 
 from . import __version__, descriptions
 from .nbp import (
     MAX_PORTFOLIO_POSITIONS,
+    ErrorCode,
     NBPClient,
     RateError,
     RateResult,
@@ -114,10 +115,31 @@ class PortfolioValue(BaseModel):
 
     model_config = ConfigDict(frozen=True)
     requested_date: str
-    total_pln: str
+    total_pln: str = Field(
+        description="Exact sum of all positions rounded once, ROUND_HALF_UP to the grosz; "
+        "it may differ by a few grosz from the sum of the rounded position values."
+    )
     positions: list[PositionValuation]
     source: str
     is_current: bool
+
+
+ARGUMENT_ERRORS: Final[dict[str, RateError]] = {
+    "positions": RateError(
+        ErrorCode.INVALID_POSITIONS,
+        f"positions must be a list of 1 to {MAX_PORTFOLIO_POSITIONS} objects with exactly the text "
+        "fields currency and amount.",
+    ),
+    "amount": RateError(
+        ErrorCode.INVALID_AMOUNT, "amount must be a positive decimal number as text, e.g. '1250.50'."
+    ),
+    "currency": RateError(ErrorCode.INVALID_CURRENCY, "currency must be an ISO 4217 code as text."),
+    "date": RateError(ErrorCode.INVALID_DATE, "date must be text in the format YYYY-MM-DD."),
+}
+"""Top-level parameter -> fixed error for input-schema violations (closed set, no caller data)."""
+INVALID_ARGUMENTS: Final = RateError(
+    ErrorCode.INVALID_ARGUMENTS, "Arguments do not match the tool input schema."
+)
 
 
 def _tool_error(error: RateError) -> ToolError:
@@ -125,9 +147,49 @@ def _tool_error(error: RateError) -> ToolError:
     return ToolError(error.to_json())
 
 
-def build_server(client: NBPClient) -> MCPServer:
+def argument_error(validation: ValidationError) -> RateError:
+    """Map an input-schema violation to a fixed error from the closed set.
+
+    Only the top-level parameter name (a key of the published schema) selects the error. The
+    Pydantic message, nested locations and rejected values are dropped: they may echo caller data,
+    including unknown field names, back to the agent.
+    """
+    params = {str(e["loc"][0]) if e["loc"] else "" for e in validation.errors()}
+    match sorted(params):
+        case [name] if name in ARGUMENT_ERRORS:
+            return ARGUMENT_ERRORS[name]
+        case _:
+            return INVALID_ARGUMENTS
+
+
+class NBPServer(MCPServer):
+    """``MCPServer`` whose input-schema errors are structured like every other tool error.
+
+    The SDK validates arguments against the input schema (``minItems``, ``maxItems``, types,
+    ``additionalProperties``) **before** the tool body runs and reports a failure as a
+    ``ToolError`` caused by a Pydantic ``ValidationError``, with the raw message and the rejected
+    input. ``call_tool`` is the public SDK entry point for every ``tools/call``; overriding it keeps
+    the strict schema the agent reads (REQ-29) and still lets no NBP request happen for invalid
+    input, while the error text becomes ``{"error", "reason"}`` from the closed set.
+    """
+
+    @override
+    async def call_tool(
+        self, name: str, arguments: dict[str, Any], context: Context[Any, Any] | None = None
+    ) -> CallToolResult | InputRequiredResult:
+        try:
+            return await super().call_tool(name, arguments, context)
+        except ToolError as error:
+            if isinstance(error, UnexpectedToolError) or not isinstance(error.__cause__, ValidationError):
+                raise
+            mapped = argument_error(error.__cause__)
+            # Same "Error executing tool <name>: " prefix as the SDK uses for errors from the tool body.
+            raise ToolError(f"Error executing tool {name}: {mapped.to_json()}") from None
+
+
+def build_server(client: NBPClient) -> NBPServer:
     """Register three read-only tools on the given NBP client and return the MCP server."""
-    server = MCPServer(
+    server = NBPServer(
         name="nbp",
         title="NBP average exchange rates (Table A)",
         instructions=descriptions.SERVER_INSTRUCTIONS,
@@ -166,18 +228,20 @@ def build_server(client: NBPClient) -> MCPServer:
             # amount in the last position never costs a network call.
             parsed = [(validate_currency(p.currency), validate_amount(p.amount)) for p in positions]
             valuations: list[PositionValuation] = []
-            total = Decimal("0.00")
+            exact_total = Decimal(0)
             current = True
             for currency, amount in parsed:
                 r = await client.rate(currency, day)
                 current &= r.is_current
-                amount_pln = round_to_grosz(amount * r.rate)
-                total += amount_pln
+                exact = amount * r.rate
+                # FR-01: the total is the exact sum rounded once, not a sum of rounded positions,
+                # so rounding errors of many positions do not accumulate.
+                exact_total += exact
                 valuations.append(
                     PositionValuation(
                         currency=r.currency,
                         amount=str(amount),
-                        amount_pln=str(amount_pln),
+                        amount_pln=str(round_to_grosz(exact)),
                         rate=str(r.rate),
                         quote_date=r.quote_date.isoformat(),
                     )
@@ -186,7 +250,7 @@ def build_server(client: NBPClient) -> MCPServer:
             raise _tool_error(error) from None
         return PortfolioValue(
             requested_date=day.isoformat(),
-            total_pln=str(total),
+            total_pln=str(round_to_grosz(exact_total)),
             positions=valuations,
             source=SOURCE,
             is_current=current,
@@ -259,4 +323,4 @@ def main(argv: Sequence[str] | None = None) -> int:
     return 0
 
 
-__all__ = ["TOOL_NAMES", "build_server", "check_environment", "main"]
+__all__ = ["TOOL_NAMES", "NBPServer", "argument_error", "build_server", "check_environment", "main"]
