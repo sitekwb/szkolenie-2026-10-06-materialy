@@ -13,6 +13,9 @@ import nbp_convert
 from nbp_convert import CENT, Conversion, NBPError
 
 APP = Path(__file__).resolve().parent.parent / "app.py"
+# Pierwsze AppTest w świeżym venv importuje Streamlit i pandas od zera (zmierzone: 22 s na laptopie,
+# 5 s przy ciepłym starcie); 30 s dawało sporadyczny timeout, stąd zapas.
+APPTEST_TIMEOUT = 120
 MIDS = {"EUR": Decimal("4.25"), "USD": Decimal("3.70"), "CHF": Decimal("4.50")}
 
 
@@ -43,7 +46,7 @@ def calls(monkeypatch: pytest.MonkeyPatch) -> list[str]:
 
 
 def test_app_runs_and_slider_does_not_refetch(calls: list[str]) -> None:
-    at = AppTest.from_file(str(APP), default_timeout=30).run()
+    at = AppTest.from_file(str(APP), default_timeout=APPTEST_TIMEOUT).run()
     assert not at.exception
     # 1000*4.25 + 500*3.70 + 200*4.50 = 7000.00 (GBP brak kursu -> błąd, pominięty)
     assert at.metric[0].value == "7,000.00"
@@ -60,7 +63,7 @@ def test_app_survives_cache_update_failure(calls: list[str], monkeypatch: pytest
         raise NBPError("API niedostępne")
 
     monkeypatch.setattr(nbp_convert, "ensure_cache", broken)
-    at = AppTest.from_file(str(APP), default_timeout=30).run()
+    at = AppTest.from_file(str(APP), default_timeout=APPTEST_TIMEOUT).run()
     assert not at.exception
     assert any("cache" in w.value for w in at.warning)
     assert at.metric[0].value == "7,000.00"  # odczyty z (zamockowanego) cache'u działają dalej
