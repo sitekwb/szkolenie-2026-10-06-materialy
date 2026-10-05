@@ -123,11 +123,9 @@ def test_allows_safe_commands(command: str) -> None:
         "time -p rm x",
         "echo rm x | sh",
         "printf 'rm x' | bash",
-        "cat script.sh | bash",
         "bash <<EOF\nrm x\nEOF",
         "bash <<'EOF'\nls\nrm x\nEOF",
         "sh <<< 'rm x'",
-        "bash script.sh",
         "busybox rm x",
         "git clean -fd",
         "git -C repo clean -xfd",
@@ -158,6 +156,11 @@ def test_blocks_review_bypasses(command: str) -> None:
         "timeout 5 git status",
         "sudo -u root ls",
         "git status && git diff",
+        "bash script.sh",
+        "sh ./run.sh",
+        "./build.sh",
+        "python3 script.py",
+        "cat script.sh | bash",
     ],
 )
 def test_allows_lookups_and_safe_control_flow(command: str) -> None:

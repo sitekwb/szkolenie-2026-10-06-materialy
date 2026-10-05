@@ -19,8 +19,9 @@ command instead:
   heredocs and here-strings, ``echo ... | sh`` and aliases;
 * it blocks ``rm``, ``rmdir``, ``unlink``, ``shred``, ``find -delete`` and ``git clean``.
 
-It fails closed: a command name computed at run time (``$CMD``), a shell reading
-a script file or unknown piped input, and input it cannot parse are blocked.
+It fails closed: a command name computed at run time (``$CMD``) and input it
+cannot parse are blocked. Script files and other piped input are not visible to
+it and pass.
 It only checks command names; see the README for what it does not catch.
 
 Standard library only; Python 3.12 or newer.
@@ -245,8 +246,8 @@ def _check_shell(words: list[str], segment: Segment, depth: int) -> Verdict:
             if index + 1 >= len(args):
                 return _block("shell -c without a command string")
             return check_command(args[index + 1], depth + 1)
-    if operands := [word for word in args if not word.startswith(("-", "+"))]:
-        return _block(f"shell runs the script file {operands[0]!r}, which cannot be checked")
+    if any(not word.startswith(("-", "+")) for word in args):
+        return ALLOWED  # a script file: its content is not visible to the hook (see README)
     for code in segment.stdin_code:
         if (verdict := check_command(code, depth + 1)).blocked:
             return verdict
@@ -255,7 +256,6 @@ def _check_shell(words: list[str], segment: Segment, depth: int) -> Verdict:
         if feeder and os.path.basename(feeder[0]) in {"echo", "printf"}:
             text = " ".join(word for word in feeder[1:] if not word.startswith("-"))
             return check_command(text.replace("\\n", "\n"), depth + 1)
-        return _block("a shell reads commands from a pipe whose content cannot be checked")
     return ALLOWED
 
 

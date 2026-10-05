@@ -24,9 +24,8 @@ Permission rules and hooks are enforced by Claude Code itself, not by the model.
   the code a shell runs: `bash -c`, `eval`, `$(...)`, backticks, heredocs (`bash <<EOF`),
   here-strings, `echo ... | sh` and aliases. It blocks `rm`, `rmdir`, `unlink`, `shred`,
   `find -delete` and `git clean`.
-- It fails closed: a command name known only at run time (`$CMD -rf build`), a shell that runs a
-  script file (`bash s.sh`) or reads unknown piped input (`cat s.sh | bash`), and input it cannot
-  parse are all blocked. Lookups such as `command -v rm`, `type rm`, `which rm` or `man rm` pass.
+- It fails closed: a command name known only at run time (`$CMD -rf build`) and input it cannot
+  parse are blocked. Lookups such as `command -v rm`, `type rm`, `which rm` or `man rm` pass.
 - Hooks run in every permission mode, including `bypassPermissions`. Exit code 0 means
   "no decision": the normal permission flow and the rules above still apply.
 
@@ -44,6 +43,11 @@ agent may well try one of these. The real boundary comes from the sandbox, a con
 and from what the account running the agent is allowed to touch, not from a hook. Treat the hook
 as a guard against the most common mistake, and the permission rules plus review of every diff
 as the human-in-the-loop step.
+
+Scripts are not checked either. `bash script.sh`, `sh ./run.sh`, `./build.sh` or `cat s.sh | bash`
+run code from a file the hook never reads, so an `rm` inside that file runs. The hook passes
+these calls on purpose: agents run scripts all the time, and a hook that blocks them gets
+switched off.
 
 ## Micro-exercise: same requests, different modes
 
