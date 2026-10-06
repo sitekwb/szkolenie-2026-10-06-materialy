@@ -35,8 +35,19 @@ claude.ai login without Anthropic's approval.
 python agent.py
 ```
 
-Expected: the subtype `success` and a reply saying the write was denied; `raport.md` is not created
-(`dontAsk` denies every call that would need approval, and only `Read` is pre-approved).
+`raport.md` is never created: `dontAsk` denies every call that would need approval, and only `Read` is
+pre-approved. Model behaviour varies, so the run ends in one of two ways:
+
+- the subtype `success` and a reply saying the write was denied (exit code 0), or
+- the agent reads `kursy.csv`, tries to write the report, the `Write` call is denied, and the third turn is
+  used up before a final reply. The script then prints the lines below and exits with code 1:
+
+  ```text
+  error_max_turns None
+  Run stopped: error_max_turns (terminal reason: max_turns)
+  ```
+
+Both results show the same boundary: the agent could not write the file.
 
 The same boundary from the CLI:
 

@@ -30,6 +30,6 @@ jobs:
           python-version: "3.12"
 
       # Konfiguracja (prefiks etykiety stanu, milestone, etykiety typu) jest
-      # w .github/issue-check.json, jeśli plik istnieje; zob. README.md.
+      # w .github/issue-check.json, jeśli plik istnieje; zob. docs/bramka-issue.md.
       - name: Walidacja issue
         run: python3 scripts/issue_check.py --event "$GITHUB_EVENT_PATH"
