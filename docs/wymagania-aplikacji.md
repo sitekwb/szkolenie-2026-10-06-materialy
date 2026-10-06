@@ -3,13 +3,13 @@
 | Field | Value |
 |---|---|
 | File | `wymagania-aplikacji.pdf` (repository root) |
-| Source | `docs/app-definition/` in the private course repository, commit `9b0b00c2e0cb511810d64283160740b22c2f21f6` |
+| Source | `docs/app-definition/` in the private course repository, commit `3fea08fb93a593aac119bc9543bb5962ca66e4cc` |
 | Build | `make wymagania-pdf` (Markdown → Quarto HTML → headless Chrome, A4) |
 | Date | 2026-10-06 |
 | Pages | 154 (A4) |
-| Size | 5004454 bytes |
-| SHA-256 | `9a63755897513cbb2b6d145d3a333f0b3180f9644df256c9ba0f64d1e95c3e5f` |
+| Size | 5037028 bytes |
+| SHA-256 | `e43047596b2e1b7ccc8a5c0149a9050597340a669a319fd199ca1516f7efd0df` |
 
-Changes since the previous version (150 pages): the prose of the definition was rewritten to pass the prose linter, and the stage column reads „poza” for requirements outside the workshop stages.
+Changes since the previous version (154 pages, source `9b0b00c`): the report service is described as a component without code in the materials, with the `agent-sdk-demo/` skeleton (#345); regulatory requirements OG-02a/b/c were added (#351); the control-layer diagram has shorter subgraph titles (#350); the stage mapping documentation was updated (#349); and the prose lint cleanup was completed (#347).
 
 Verify with `sha256sum -c SHA256SUMS` in the repository root.
