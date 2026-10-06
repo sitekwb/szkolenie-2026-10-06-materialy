@@ -4430,6 +4430,58 @@ overflow: hidden!important;
 display:block!important;
 }</style></aside>
 </section>
+<section id="plan-na-każdy-etap" class="slide level2 etapy5">
+<h2>Plan na każdy etap</h2>
+<div class="porownanie etapy punkty-planszy">
+<table class="caption-top">
+<colgroup>
+<col style="width: 28%">
+<col style="width: 71%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Krok</th>
+<th>Co się dzieje</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Wprowadzenie</td>
+<td>po co nam ten punkt i jakie ryzyko za nim stoi</td>
+</tr>
+<tr class="even">
+<td>Metoda</td>
+<td>jak pracujemy z agentem: polecenia, pliki, ustawienia</td>
+</tr>
+<tr class="odd">
+<td>Wymagania funkcjonalne</td>
+<td>które wymagania aplikacji realizujemy w tym punkcie</td>
+</tr>
+<tr class="even">
+<td>Praca własna</td>
+<td>budujesz to sam na swojej maszynie</td>
+</tr>
+<tr class="odd">
+<td>Dyskusja i wnioski</td>
+<td>porównujemy wyniki z poprzednim punktem i zapisujemy wnioski</td>
+</tr>
+</tbody>
+</table>
+</div>
+<aside class="notes">
+<p>Około minuty. Każdy punkt planszy ma ten sam układ pięciu kroków, więc uczestnik wie, czego się spodziewać i kiedy przychodzi jego kolej na pracę. Wprowadzenie mówi, po co jest dany punkt, łącznie z ryzykiem bezpieczeństwa, które się z nim wiąże. Metoda pokazuje sposób pracy z agentem. Wymagania funkcjonalne wskazują, który fragment Kokpitu powstaje w tym punkcie. Praca własna odbywa się na maszynie uczestnika. Dyskusja i wnioski porównują wynik z poprzednim punktem. W punktach oznaczonych jako zadanie domowe praca własna i wnioski przechodzą poza salę.</p>
+<style type="text/css">
+span.MJX_Assistive_MathML {
+position:absolute!important;
+clip: rect(1px, 1px, 1px, 1px);
+padding: 1px 0 0 0!important;
+border: 0!important;
+height: 1px!important;
+width: 1px!important;
+overflow: hidden!important;
+display:block!important;
+}</style></aside>
+</section>
 <section id="przegląd-wymagań-aplikacji-kokpit-funkcje" class="slide level2 przeglad-wymagan">
 <h2>Przegląd wymagań aplikacji (Kokpit): funkcje</h2>
 <div class="porownanie">
@@ -8269,6 +8321,28 @@ overflow: hidden!important;
 display:block!important;
 }</style></aside>
 </section>
+<section id="przepisy-które-karta-musi-uwzględnić" class="slide level2 karta-lista" data-menu-title="Przepisy a karta">
+<h2>Przepisy, które karta musi uwzględnić</h2>
+<ul>
+<li>RODO: dane osobowe w polu 2 <span class="citation" data-cites="gdpr2016"><a href="#/ref-gdpr2016">[48]</a></span>.</li>
+<li>AI Act: ocena zdolności kredytowej to wysokie ryzyko <span class="citation" data-cites="eu2024aiact"><a href="#/ref-eu2024aiact">[49]</a></span>.</li>
+<li>DORA: dostawca modelu w ryzyku ICT <span class="citation" data-cites="dora2024"><a href="#/ref-dora2024">[50]</a></span>.</li>
+<li>KNF: nadzór nad ICT opiera się na DORA <span class="citation" data-cites="knf2025dora"><a href="#/ref-knf2025dora">[51]</a></span>.</li>
+</ul>
+<aside class="notes">
+<p>Trzy minuty. Karta nie zastępuje opinii prawnej, ale każde pole ma swój przepis. RODO dotyczy pola 2: jeśli agent czyta dane osobowe, trzeba wiedzieć, na jakiej podstawie i czy naprawdę ich potrzebuje; nasz kokpit używa wyłącznie danych syntetycznych <span class="citation" data-cites="gdpr2016"><a href="#/ref-gdpr2016">[48]</a></span>. AI Act klasyfikuje systemy według ryzyka; załącznik III wymienia ocenę zdolności kredytowej osób fizycznych jako zastosowanie wysokiego ryzyka, z wyjątkiem wykrywania oszustw <span class="citation" data-cites="eu2024aiact"><a href="#/ref-eu2024aiact">[49]</a></span>. Raport ryzyka walutowego dla skarbnika do tej kategorii nie należy, ale pole 1 powinno to zapisać wprost. DORA obejmuje ryzyko ICT instytucji finansowej, w tym zewnętrznych dostawców usług ICT, więc dostawca modelu językowego i serwis agenta wchodzą do rejestru i do testów odporności, co łączy się z polami 5 i 6 <span class="citation" data-cites="dora2024"><a href="#/ref-dora2024">[50]</a></span>. KNF z dniem wejścia DORA w życie uchyliła swoje dawne wytyczne dotyczące IT w bankach i odwołała komunikat chmurowy, bo ich zakres pokrywa się z DORA <span class="citation" data-cites="knf2025dora"><a href="#/ref-knf2025dora">[51]</a></span>. Dlatego cytujemy DORA, nie dawne wytyczne nadzorcy. Osobnego obowiązującego dokumentu KNF o AI w bankach nie znalazłem; jeśli sala zna taki dokument, warto go dopisać do karty.</p>
+<style type="text/css">
+span.MJX_Assistive_MathML {
+position:absolute!important;
+clip: rect(1px, 1px, 1px, 1px);
+padding: 1px 0 0 0!important;
+border: 0!important;
+height: 1px!important;
+width: 1px!important;
+overflow: hidden!important;
+display:block!important;
+}</style></aside>
+</section>
 <section id="ostatnia-linia-jak-ktoś-mógłby-to-wykorzystać" class="slide level2 pole-karty" data-menu-title="Linia red-team">
 <h2>Ostatnia linia: jak ktoś mógłby to wykorzystać</h2>
 <div class="pole">
@@ -8277,14 +8351,14 @@ display:block!important;
 <p>Jak ktoś mógłby wykorzystać rozwiązanie i co to zatrzyma?</p>
 </div>
 <div class="przyklad">
-<p>Złośliwy komentarz w danych każe asystentowi wysłać salda na obcy adres <span class="citation" data-cites="owasp2025llmtop10"><a href="#/ref-owasp2025llmtop10">[48]</a></span>. Zatrzymują go: brak narzędzia wysyłki, zgoda człowieka, wpis w dzienniku.</p>
+<p>Złośliwy komentarz w danych każe asystentowi wysłać salda na obcy adres <span class="citation" data-cites="owasp2025llmtop10"><a href="#/ref-owasp2025llmtop10">[52]</a></span>. Zatrzymują go: brak narzędzia wysyłki, zgoda człowieka, wpis w dzienniku.</p>
 </div>
 <div class="blad">
 <p>Ogólnik „agent może zostać zaatakowany”.</p>
 </div>
 </div>
 <aside class="notes">
-<p>Dwie minuty. Linię red-team wypełniamy na końcu, jednym zdaniem. Wcielamy się w napastnika i opisujemy konkretny scenariusz: jakie dane trafiają do asystenta i co złośliwy tekst w nich mógłby go namówić do zrobienia. Wstrzyknięcie instrukcji (prompt injection), czyli ukrycie polecenia w danych, które agent czyta, znamy z poprzedniej części warsztatu i jest ono pierwszą pozycją listy zagrożeń OWASP dla aplikacji z modelami językowymi <span class="citation" data-cites="owasp2025llmtop10"><a href="#/ref-owasp2025llmtop10">[48]</a></span>. Do scenariusza dopisujemy kontrolę z karty, która go zatrzymuje, z numerem pola. W przykładzie są trzy warstwy: asystent nie ma narzędzia wysyłki, człowiek musi zatwierdzić każdą wysyłkę, a próba zostaje w dzienniku. Jeśli do scenariusza nie da się dopisać żadnej kontroli, karta pokazała lukę i dobrze, że znaleźliśmy ją teraz.</p>
+<p>Dwie minuty. Linię red-team wypełniamy na końcu, jednym zdaniem. Wcielamy się w napastnika i opisujemy konkretny scenariusz: jakie dane trafiają do asystenta i co złośliwy tekst w nich mógłby go namówić do zrobienia. Wstrzyknięcie instrukcji (prompt injection), czyli ukrycie polecenia w danych, które agent czyta, znamy z poprzedniej części warsztatu i jest ono pierwszą pozycją listy zagrożeń OWASP dla aplikacji z modelami językowymi <span class="citation" data-cites="owasp2025llmtop10"><a href="#/ref-owasp2025llmtop10">[52]</a></span>. Do scenariusza dopisujemy kontrolę z karty, która go zatrzymuje, z numerem pola. W przykładzie są trzy warstwy: asystent nie ma narzędzia wysyłki, człowiek musi zatwierdzić każdą wysyłkę, a próba zostaje w dzienniku. Jeśli do scenariusza nie da się dopisać żadnej kontroli, karta pokazała lukę i dobrze, że znaleźliśmy ją teraz.</p>
 <style type="text/css">
 span.MJX_Assistive_MathML {
 position:absolute!important;
@@ -8387,7 +8461,7 @@ display:block!important;
 }</style></aside>
 </section>
 <section id="bibliografia" class="slide level2 bibliografia smaller scrollable">
-<h2>Bibliografia (1/6)</h2>
+<h2>Bibliografia (1/7)</h2>
 <div id="refs" class="references csl-bib-body" data-entry-spacing="0" role="list">
 <div id="ref-sitek2026materialy" class="csl-entry" role="listitem">
 <div class="csl-left-margin">[1] </div><div class="csl-right-inline">W. Sitek, <span>„Materiały do szkolenia 2026-10-06”</span>. Repozytorium GitHub sitekwb/szkolenie-2026-10-06-materialy, 2026. Dostępne na: <a href="https://github.com/sitekwb/szkolenie-2026-10-06-materialy">https://github.com/sitekwb/szkolenie-2026-10-06-materialy</a></div>
@@ -8416,7 +8490,7 @@ display:block!important;
 </div>
 </section>
 <section id="bibliografia-2" class="slide level2 bibliografia smaller">
-<h2>Bibliografia (2/6)</h2>
+<h2>Bibliografia (2/7)</h2>
 <div id="refs-2" class="references csl-bib-body" data-entry-spacing="0" role="list">
 <div id="ref-openai2026approvals" class="csl-entry" role="listitem">
 <div class="csl-left-margin">[9] </div><div class="csl-right-inline">OpenAI, <em>Agent approvals &amp; security — ChatGPT Learn</em>. 2026. Dostępne na: <a href="https://learn.chatgpt.com/docs/agent-approvals-security">https://learn.chatgpt.com/docs/agent-approvals-security</a></div>
@@ -8445,7 +8519,7 @@ display:block!important;
 </div>
 </section>
 <section id="bibliografia-3" class="slide level2 bibliografia smaller">
-<h2>Bibliografia (3/6)</h2>
+<h2>Bibliografia (3/7)</h2>
 <div id="refs-3" class="references csl-bib-body" data-entry-spacing="0" role="list">
 <div id="ref-anthropic2026modelconfig" class="csl-entry" role="listitem">
 <div class="csl-left-margin">[17] </div><div class="csl-right-inline">Anthropic, <em>Model configuration — Claude Code Docs</em>. 2026. Dostępne na: <a href="https://code.claude.com/docs/en/model-config">https://code.claude.com/docs/en/model-config</a></div>
@@ -8474,7 +8548,7 @@ display:block!important;
 </div>
 </section>
 <section id="bibliografia-4" class="slide level2 bibliografia smaller">
-<h2>Bibliografia (4/6)</h2>
+<h2>Bibliografia (4/7)</h2>
 <div id="refs-4" class="references csl-bib-body" data-entry-spacing="0" role="list">
 <div id="ref-github2026speckit" class="csl-entry" role="listitem">
 <div class="csl-left-margin">[25] </div><div class="csl-right-inline">GitHub, <span>„Spec Kit”</span>. Repozytorium GitHub github/spec-kit, 2026. Dostępne na: <a href="https://github.com/github/spec-kit">https://github.com/github/spec-kit</a></div>
@@ -8503,7 +8577,7 @@ display:block!important;
 </div>
 </section>
 <section id="bibliografia-5" class="slide level2 bibliografia smaller">
-<h2>Bibliografia (5/6)</h2>
+<h2>Bibliografia (5/7)</h2>
 <div id="refs-5" class="references csl-bib-body" data-entry-spacing="0" role="list">
 <div id="ref-anthropic2026permissionrules" class="csl-entry" role="listitem">
 <div class="csl-left-margin">[33] </div><div class="csl-right-inline">Anthropic, <em>Configure permissions — Claude Code Docs</em>. 2026. Dostępne na: <a href="https://code.claude.com/docs/en/permissions">https://code.claude.com/docs/en/permissions</a></div>
@@ -8532,7 +8606,7 @@ display:block!important;
 </div>
 </section>
 <section id="bibliografia-6" class="slide level2 bibliografia smaller">
-<h2>Bibliografia (6/6)</h2>
+<h2>Bibliografia (6/7)</h2>
 <div id="refs-6" class="references csl-bib-body" data-entry-spacing="0" role="list">
 <div id="ref-anthropic2026agentsdk" class="csl-entry" role="listitem">
 <div class="csl-left-margin">[41] </div><div class="csl-right-inline">Anthropic, <em>Agent SDK overview — Claude Code Docs</em>. 2026. Dostępne na: <a href="https://code.claude.com/docs/en/agent-sdk/overview">https://code.claude.com/docs/en/agent-sdk/overview</a></div>
@@ -8555,8 +8629,25 @@ display:block!important;
 <div id="ref-nist2024genai" class="csl-entry" role="listitem">
 <div class="csl-left-margin">[47] </div><div class="csl-right-inline">National Institute of Standards and Technology, <span>„Artificial Intelligence Risk Management Framework: Generative Artificial Intelligence Profile”</span>, NIST AI 600-1, 2024. doi: <a href="https://doi.org/10.6028/NIST.AI.600-1">10.6028/NIST.AI.600-1</a>.</div>
 </div>
+<div id="ref-gdpr2016" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[48] </div><div class="csl-right-inline">Parlament Europejski i Rada UE, <em>Rozporządzenie Parlamentu Europejskiego i Rady (<span>UE</span>) 2016/679 (RODO)</em>. 2016. Dostępne na: <a href="https://eur-lex.europa.eu/eli/reg/2016/679/oj">https://eur-lex.europa.eu/eli/reg/2016/679/oj</a></div>
+</div>
+</div>
+</section>
+<section id="bibliografia-7" class="slide level2 bibliografia smaller">
+<h2>Bibliografia (7/7)</h2>
+<div id="refs-7" class="references csl-bib-body" data-entry-spacing="0" role="list">
+<div id="ref-eu2024aiact" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[49] </div><div class="csl-right-inline">Parlament Europejski i Rada UE, <em>Rozporządzenie Parlamentu Europejskiego i Rady (<span>UE</span>) 2024/1689 (AI Act)</em>. 2024. Dostępne na: <a href="https://eur-lex.europa.eu/eli/reg/2024/1689/oj">https://eur-lex.europa.eu/eli/reg/2024/1689/oj</a></div>
+</div>
+<div id="ref-dora2024" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[50] </div><div class="csl-right-inline">Parlament Europejski i Rada UE, <em>Rozporządzenie Parlamentu Europejskiego i Rady (<span>UE</span>) 2022/2554 w sprawie operacyjnej odporności cyfrowej sektora finansowego (<span>DORA</span>)</em>. 2022. Dostępne na: <a href="https://eur-lex.europa.eu/eli/reg/2022/2554/oj">https://eur-lex.europa.eu/eli/reg/2022/2554/oj</a></div>
+</div>
+<div id="ref-knf2025dora" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[51] </div><div class="csl-right-inline">Komisja Nadzoru Finansowego, <span>„Uchylenie niektórych wytycznych i rekomendacji <span>KNF</span> oraz odwołanie „Komunikatu chmurowego””</span>. 2025. Dostępne na: <a href="https://www.knf.gov.pl/?articleId=92241&amp;p_id=18">https://www.knf.gov.pl/?articleId=92241&amp;p_id=18</a></div>
+</div>
 <div id="ref-owasp2025llmtop10" class="csl-entry" role="listitem">
-<div class="csl-left-margin">[48] </div><div class="csl-right-inline">OWASP GenAI Security Project, <span>„OWASP Top 10 for LLM Applications 2025”</span>. OWASP, 2025. Dostępne na: <a href="https://genai.owasp.org/llm-top-10/">https://genai.owasp.org/llm-top-10/</a></div>
+<div class="csl-left-margin">[52] </div><div class="csl-right-inline">OWASP GenAI Security Project, <span>„OWASP Top 10 for LLM Applications 2025”</span>. OWASP, 2025. Dostępne na: <a href="https://genai.owasp.org/llm-top-10/">https://genai.owasp.org/llm-top-10/</a></div>
 </div>
 </div>
 
