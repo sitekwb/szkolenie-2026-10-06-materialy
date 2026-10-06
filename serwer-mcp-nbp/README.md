@@ -55,21 +55,54 @@ A few notes:
   git, and Claude Code asks every team member for consent before first use. The venv path is local to the
   machine, though, so the `user` scope fits the workshop better. The default scope is `local`: only you, only
   the current project.
-- The server **refuses to start** (exit code 3, message on stderr) when a non-empty model service key is in its
-  environment: `ANTHROPIC_API_KEY`, `ANTHROPIC_AUTH_TOKEN`, `CLAUDE_CODE_OAUTH_TOKEN` or `OPENAI_API_KEY`
-  (ADR-06). If you keep such a key in your shell and the server process inherits it, override it with an empty
-  value at registration. The server name must come **before** `-e` (the `-e` option takes several values and
-  would otherwise swallow the name), and `--` ends the options:
-  `claude mcp add nbp --transport stdio --scope user -e ANTHROPIC_API_KEY= -- ~/szkolenie-2026-10-06-materialy/serwer-mcp-nbp/.venv/bin/nbp-mcp-server`.
-  Claude Code passes `ANTHROPIC_API_KEY` from the shell to the MCP process, so without this the server will
-  not start. When you log in with `/login` or with `CLAUDE_CODE_OAUTH_TOKEN` the workaround is not needed,
-  because Claude Code does not pass that token to MCP servers (verified in Docker with Claude Code 2.1.289).
+- The server **refuses to start** (exit code 3) when a model service key is in its environment; `claude mcp
+  list` then shows only "Failed to connect". See [Troubleshooting](#troubleshooting).
 - Removing the server: `claude mcp remove --scope user nbp`.
 
 `constraints.txt` pins the exact version of every runtime and dev dependency, so each installation gets the
 same MCP SDK and the same `tools/list` manifest whose SHA-256 is pinned in `tests/test_descriptions.py`
 (REQ-29). It is plain pip, no extra tool. To update the pins: in a fresh venv run `pip install -e '.[dev]'`,
 then `pip freeze --exclude-editable > constraints.txt`, run the tests and review the diff.
+
+## Troubleshooting
+
+### `claude mcp list` shows `nbp: … - ✗ Failed to connect`
+
+The most common cause: the server process inherited a model service key and refused to start (exit code 3,
+ADR-06: the MCP server holds no model key). Claude Code shows only "Failed to connect", not the server's
+stderr. The server refuses to start when any of these variables has a non-empty value:
+
+<!-- model-key-variables: keep in sync with MODEL_KEY_VARIABLES in src/nbp_mcp_server/server.py -->
+- `ANTHROPIC_API_KEY`
+- `ANTHROPIC_AUTH_TOKEN`
+- `CLAUDE_CODE_OAUTH_TOKEN`
+- `OPENAI_API_KEY`
+<!-- /model-key-variables -->
+
+Diagnose without an MCP client. The first command shows the refusal if a key is set in your shell; the second
+clears the variables for this one run only and should print the EUR rate as JSON:
+
+```bash
+cd ~/szkolenie-2026-10-06-materialy/serwer-mcp-nbp
+.venv/bin/nbp-mcp-server --check EUR; echo "exit $?"
+env -u ANTHROPIC_API_KEY -u ANTHROPIC_AUTH_TOKEN -u CLAUDE_CODE_OAUTH_TOKEN -u OPENAI_API_KEY \
+  .venv/bin/nbp-mcp-server --check EUR
+```
+
+Fix: register the server again and override every variable with an empty value. The server name (`nbp`) must
+come **before** `-e` (the `-e` option takes several values and would otherwise swallow the name), and `--` ends
+the options before the absolute path to the binary:
+
+```bash
+claude mcp remove --scope user nbp
+claude mcp add nbp --transport stdio --scope user \
+  -e ANTHROPIC_API_KEY= -e ANTHROPIC_AUTH_TOKEN= -e CLAUDE_CODE_OAUTH_TOKEN= -e OPENAI_API_KEY= \
+  -- ~/szkolenie-2026-10-06-materialy/serwer-mcp-nbp/.venv/bin/nbp-mcp-server
+claude mcp list
+```
+
+An empty value counts as "not set", so the server starts. The override applies only to the server process;
+your shell and Claude Code keep their keys.
 
 ## Errors
 

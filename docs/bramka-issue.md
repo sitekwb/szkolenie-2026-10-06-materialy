@@ -10,7 +10,7 @@ Wynik to status joba `issue-check` w zakładce Actions: zielony albo czerwony, z
 
 ## Zawartość
 
-Układ katalogu odpowiada korzeniowi repo docelowego.
+W tym repozytorium materiałów pliki bramki leżą w korzeniu repo, a nie w osobnym katalogu `bramka-issue/`. Ścieżki w tabeli i w komendach poniżej są ścieżkami względem korzenia repo i są takie same w repo docelowym.
 
 | Plik | Rola |
 |------|------|
@@ -23,13 +23,20 @@ Układ katalogu odpowiada korzeniowi repo docelowego.
 
 ## Przeniesienie do własnego repo
 
-Z katalogu, w którym leży `bramka-issue/`, do sklonowanego repo docelowego (`../moje-repo` to przykład):
+Komendy zakładają, że repo materiałów jest sklonowane do `~/materialy`, a Twoje repo docelowe do `~/moje-repo` (obie ścieżki to przykład). Wymagane: `git`, Python 3.12+ z `python3-venv`, do etykiety `gh`.
 
 ```bash
-mkdir -p ../moje-repo/docs
-cp -R bramka-issue/.github bramka-issue/scripts bramka-issue/tests ../moje-repo/
-cp bramka-issue/README.md ../moje-repo/docs/bramka-issue.md   # własny README repo zostaje nietknięty
-cd ../moje-repo
+git clone https://github.com/sitekwb/szkolenie-2026-10-06-materialy.git ~/materialy
+cd ~/moje-repo
+mkdir -p .github/ISSUE_TEMPLATE .github/workflows scripts tests docs
+cp ~/materialy/.github/ISSUE_TEMPLATE/praca.yml .github/ISSUE_TEMPLATE/
+cp ~/materialy/.github/workflows/issue-check.yml .github/workflows/
+cp ~/materialy/scripts/issue_check.py scripts/
+cp -R ~/materialy/tests/test_issue_check.py ~/materialy/tests/issues ~/materialy/tests/zdarzenia tests/
+cp ~/materialy/docs/bramka-issue.md docs/bramka-issue.md   # własny README repo zostaje nietknięty
+test -f scripts/issue_check.py && echo ok                                  # ok
+python3 scripts/issue_check.py tests/issues/dobry.md; echo "exit $?"                     # exit 0
+python3 scripts/issue_check.py tests/issues/zly-dwie-etykiety-stanu.md; echo "exit $?"   # exit 1
 python3 -m venv .venv && . .venv/bin/activate && pip install pytest
 printf '.venv/\n__pycache__/\n' >> .gitignore   # venv i cache Pythona nie trafiają do repo
 python3 -m pytest tests/test_issue_check.py -q   # wszystkie zielone
@@ -39,9 +46,11 @@ git commit -m "Bramka issue: szablon, workflow, walidator i testy"
 git push
 ```
 
+Kopiowane są tylko pliki bramki: `.github/ISSUE_TEMPLATE/praca.yml`, `.github/workflows/issue-check.yml`, `scripts/issue_check.py`, `tests/test_issue_check.py`, `tests/issues/`, `tests/zdarzenia/` i ten opis. Pozostałe katalogi repo materiałów (np. `.github/workflows/ci.yml`, `serwer-mcp-nbp/`) nie należą do bramki.
+
 Uwagi do kroków:
 
-- `cp -R` nadpisuje pliki o tych samych ścieżkach. Jeśli repo ma już `.github/ISSUE_TEMPLATE/praca.yml`, `.github/workflows/issue-check.yml` albo `scripts/issue_check.py`, sprawdź `git diff` przed commitem.
+- `cp` nadpisuje pliki o tych samych ścieżkach. Jeśli repo ma już `.github/ISSUE_TEMPLATE/praca.yml`, `.github/workflows/issue-check.yml` albo `scripts/issue_check.py`, sprawdź `git diff` przed commitem.
 - Etykieta `state:nowe` musi istnieć w repo. Bez niej GitHub nie nada jej z szablonu i bramka zgłosi brak etykiety stanu.
 - Workflow działa tylko z gałęzi domyślnej. Po pushu załóż próbne issue z szablonu „Praca (zadanie w repo)” i sprawdź w Actions, że job `issue-check` się uruchomił.
 - Żeby check blokował pracę, a nie tylko ostrzegał, zespół umawia się, że nie zaczyna issue z czerwonym `issue-check`. Status issue nie blokuje technicznie merge'a PR-a; PR-y pilnuje osobny CI.
